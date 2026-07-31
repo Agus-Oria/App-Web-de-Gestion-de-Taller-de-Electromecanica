@@ -11,7 +11,7 @@ import java.util.List;
 public record OrdenTrabajoCreateDto(
         @NotNull Instant fechaIngreso,
         Instant fechaEntrega,
-        @NotBlank @Size(max = 1000) String problemaInformado,
+        @Size(max = 1000) String problemaInformado,
         @Size(max = 1000) String diagnostico,
         EstadoOrden estado,
         @NotNull Long clienteId,

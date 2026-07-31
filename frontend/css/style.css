@@ -1,0 +1,24 @@
+body {
+    background-color: #f5f6f8;
+}
+
+main.container {
+    padding-bottom: 3rem;
+}
+
+.card {
+    border: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.table .btn-accion {
+    padding: 0.25rem 0.45rem;
+}
+
+.linea-subtotal {
+    white-space: nowrap;
+}
+
+.badge {
+    font-weight: 500;
+}
