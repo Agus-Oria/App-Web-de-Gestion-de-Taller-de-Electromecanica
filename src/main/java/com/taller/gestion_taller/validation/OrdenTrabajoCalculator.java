@@ -26,4 +26,11 @@ public class OrdenTrabajoCalculator {
 
         ordenTrabajo.setTotal(total);
     }
+
+    public BigDecimal calcularDeuda(OrdenTrabajo ordenTrabajo) {
+        BigDecimal pagado = ordenTrabajo.getPagado() == null ? BigDecimal.ZERO : ordenTrabajo.getPagado();
+        return ordenTrabajo.getTotal()
+                .subtract(pagado)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
 }

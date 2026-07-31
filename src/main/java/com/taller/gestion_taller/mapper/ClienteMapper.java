@@ -13,6 +13,7 @@ public class ClienteMapper {
         Cliente cliente = new Cliente();
         cliente.setNombre(dto.nombre());
         cliente.setApellido(dto.apellido());
+        cliente.setDni(normalizarDni(dto.dni()));
         cliente.setTelefono(dto.telefono());
         return cliente;
     }
@@ -20,6 +21,7 @@ public class ClienteMapper {
     public void updateEntity(Cliente cliente, ClienteUpdateDto dto) {
         cliente.setNombre(dto.nombre());
         cliente.setApellido(dto.apellido());
+        cliente.setDni(normalizarDni(dto.dni()));
         cliente.setTelefono(dto.telefono());
     }
 
@@ -28,6 +30,11 @@ public class ClienteMapper {
                 cliente.getId(),
                 cliente.getNombre(),
                 cliente.getApellido(),
+                cliente.getDni(),
                 cliente.getTelefono());
+    }
+
+    public String normalizarDni(String dni) {
+        return dni.trim();
     }
 }

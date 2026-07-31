@@ -13,6 +13,8 @@ public record OrdenTrabajoResponseDto(
         String diagnostico,
         EstadoOrden estado,
         BigDecimal total,
+        BigDecimal pagado,
+        BigDecimal deuda,
         ClienteResponseDto cliente,
         VehiculoResponseDto vehiculo,
         List<DetalleOrdenTrabajoResponseDto> detalles

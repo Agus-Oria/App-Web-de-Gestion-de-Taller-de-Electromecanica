@@ -7,10 +7,12 @@ import com.taller.gestion_taller.dto.OrdenTrabajoUpdateDto;
 import com.taller.gestion_taller.entity.Cliente;
 import com.taller.gestion_taller.entity.OrdenTrabajo;
 import com.taller.gestion_taller.entity.Vehiculo;
+import com.taller.gestion_taller.exception.BadRequestException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.OrdenTrabajoMapper;
 import com.taller.gestion_taller.repository.OrdenTrabajoRepository;
 import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
+import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ public class OrdenTrabajoService {
         Vehiculo vehiculo = vehiculoService.buscarEntidad(dto.vehiculoId());
         OrdenTrabajo ordenTrabajo = ordenTrabajoMapper.toEntity(dto, cliente, vehiculo);
         calculator.recalcularTotales(ordenTrabajo);
+        validarPagosNoSuperenTotal(ordenTrabajo);
         return ordenTrabajoMapper.toResponse(ordenTrabajoRepository.save(ordenTrabajo));
     }
 
@@ -81,6 +84,7 @@ public class OrdenTrabajoService {
         Vehiculo vehiculo = vehiculoService.buscarEntidad(dto.vehiculoId());
         ordenTrabajoMapper.updateEntity(ordenTrabajo, dto, cliente, vehiculo);
         calculator.recalcularTotales(ordenTrabajo);
+        validarPagosNoSuperenTotal(ordenTrabajo);
         return ordenTrabajoMapper.toResponse(ordenTrabajoRepository.save(ordenTrabajo));
     }
 
@@ -112,6 +116,22 @@ public class OrdenTrabajoService {
     @Transactional
     public void recalcularYGuardar(OrdenTrabajo ordenTrabajo) {
         calculator.recalcularTotales(ordenTrabajo);
+        validarPagosNoSuperenTotal(ordenTrabajo);
         ordenTrabajoRepository.save(ordenTrabajo);
+    }
+
+    @Transactional
+    public void actualizarPagado(Long ordenTrabajoId, BigDecimal pagado) {
+        OrdenTrabajo ordenTrabajo = buscarEntidad(ordenTrabajoId);
+        ordenTrabajo.setPagado(pagado);
+        validarPagosNoSuperenTotal(ordenTrabajo);
+        ordenTrabajoRepository.save(ordenTrabajo);
+    }
+
+    private void validarPagosNoSuperenTotal(OrdenTrabajo ordenTrabajo) {
+        BigDecimal pagado = ordenTrabajo.getPagado() == null ? BigDecimal.ZERO : ordenTrabajo.getPagado();
+        if (pagado.compareTo(ordenTrabajo.getTotal()) > 0) {
+            throw new BadRequestException("El monto pagado no puede superar el total de la orden");
+        }
     }
 }

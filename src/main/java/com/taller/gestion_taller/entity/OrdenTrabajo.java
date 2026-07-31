@@ -50,6 +50,9 @@ public class OrdenTrabajo {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal pagado = BigDecimal.ZERO;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
@@ -60,4 +63,7 @@ public class OrdenTrabajo {
 
     @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleOrdenTrabajo> detalles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pago> pagos = new ArrayList<>();
 }

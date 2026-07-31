@@ -64,8 +64,8 @@ public class DetalleOrdenTrabajoService {
     public DetalleOrdenTrabajoResponseDto actualizar(Long id, DetalleOrdenTrabajoUpdateDto dto) {
         DetalleOrdenTrabajo detalle = buscarEntidad(id);
         detalleMapper.updateEntity(detalle, dto);
-        calculator.recalcularTotales(detalle.getOrdenTrabajo());
-        return detalleMapper.toResponse(detalleRepository.save(detalle));
+        ordenTrabajoService.recalcularYGuardar(detalle.getOrdenTrabajo());
+        return detalleMapper.toResponse(detalle);
     }
 
     @Transactional

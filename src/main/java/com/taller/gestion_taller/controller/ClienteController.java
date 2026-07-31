@@ -64,6 +64,12 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.buscarPorNombre(nombre, pageable));
     }
 
+    @GetMapping("/dni/{dni}")
+    @Operation(summary = "Buscar cliente por DNI")
+    public ResponseEntity<ClienteResponseDto> buscarPorDni(@PathVariable String dni) {
+        return ResponseEntity.ok(clienteService.buscarPorDni(dni));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente")
     public ResponseEntity<ClienteResponseDto> actualizar(

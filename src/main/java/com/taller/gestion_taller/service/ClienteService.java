@@ -4,6 +4,7 @@ import com.taller.gestion_taller.dto.ClienteCreateDto;
 import com.taller.gestion_taller.dto.ClienteResponseDto;
 import com.taller.gestion_taller.dto.ClienteUpdateDto;
 import com.taller.gestion_taller.entity.Cliente;
+import com.taller.gestion_taller.exception.DuplicateResourceException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.ClienteMapper;
 import com.taller.gestion_taller.repository.ClienteRepository;
@@ -25,6 +26,7 @@ public class ClienteService {
 
     @Transactional
     public ClienteResponseDto crear(ClienteCreateDto dto) {
+        validarDniDisponible(clienteMapper.normalizarDni(dto.dni()));
         return clienteMapper.toResponse(clienteRepository.save(clienteMapper.toEntity(dto)));
     }
 
@@ -43,9 +45,20 @@ public class ClienteService {
         return clienteRepository.findByNombreContainingIgnoreCase(nombre, pageable).map(clienteMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public ClienteResponseDto buscarPorDni(String dni) {
+        String dniNormalizado = clienteMapper.normalizarDni(dni);
+        return clienteMapper.toResponse(clienteRepository.findByDni(dniNormalizado)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con dni " + dniNormalizado)));
+    }
+
     @Transactional
     public ClienteResponseDto actualizar(Long id, ClienteUpdateDto dto) {
         Cliente cliente = buscarEntidad(id);
+        String dni = clienteMapper.normalizarDni(dto.dni());
+        if (clienteRepository.existsByDniAndIdNot(dni, id)) {
+            throw new DuplicateResourceException("Ya existe un cliente con dni " + dni);
+        }
         clienteMapper.updateEntity(cliente, dto);
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
@@ -60,5 +73,11 @@ public class ClienteService {
     public Cliente buscarEntidad(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id " + id));
+    }
+
+    private void validarDniDisponible(String dni) {
+        if (clienteRepository.existsByDni(dni)) {
+            throw new DuplicateResourceException("Ya existe un cliente con dni " + dni);
+        }
     }
 }

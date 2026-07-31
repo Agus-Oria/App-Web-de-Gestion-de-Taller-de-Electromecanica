@@ -9,6 +9,7 @@ import com.taller.gestion_taller.entity.DetalleOrdenTrabajo;
 import com.taller.gestion_taller.entity.EstadoOrden;
 import com.taller.gestion_taller.entity.OrdenTrabajo;
 import com.taller.gestion_taller.entity.Vehiculo;
+import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -19,14 +20,17 @@ public class OrdenTrabajoMapper {
     private final ClienteMapper clienteMapper;
     private final VehiculoMapper vehiculoMapper;
     private final DetalleOrdenTrabajoMapper detalleMapper;
+    private final OrdenTrabajoCalculator calculator;
 
     public OrdenTrabajoMapper(
             ClienteMapper clienteMapper,
             VehiculoMapper vehiculoMapper,
-            DetalleOrdenTrabajoMapper detalleMapper) {
+            DetalleOrdenTrabajoMapper detalleMapper,
+            OrdenTrabajoCalculator calculator) {
         this.clienteMapper = clienteMapper;
         this.vehiculoMapper = vehiculoMapper;
         this.detalleMapper = detalleMapper;
+        this.calculator = calculator;
     }
 
     public OrdenTrabajo toEntity(OrdenTrabajoCreateDto dto, Cliente cliente, Vehiculo vehiculo) {
@@ -37,6 +41,7 @@ public class OrdenTrabajoMapper {
         ordenTrabajo.setDiagnostico(dto.diagnostico());
         ordenTrabajo.setEstado(dto.estado() == null ? EstadoOrden.EN_REPARACION : dto.estado());
         ordenTrabajo.setTotal(BigDecimal.ZERO);
+        ordenTrabajo.setPagado(BigDecimal.ZERO);
         ordenTrabajo.setCliente(cliente);
         ordenTrabajo.setVehiculo(vehiculo);
 
@@ -72,6 +77,8 @@ public class OrdenTrabajoMapper {
                 ordenTrabajo.getDiagnostico(),
                 ordenTrabajo.getEstado(),
                 ordenTrabajo.getTotal(),
+                ordenTrabajo.getPagado(),
+                calculator.calcularDeuda(ordenTrabajo),
                 clienteMapper.toResponse(ordenTrabajo.getCliente()),
                 vehiculoMapper.toResponse(ordenTrabajo.getVehiculo()),
                 detalles);
