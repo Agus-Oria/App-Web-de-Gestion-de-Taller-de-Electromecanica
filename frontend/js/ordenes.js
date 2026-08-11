@@ -3,6 +3,13 @@ $(function () {
     let editandoId = null;
     let ordenActual = null;
     let detalleEditandoId = null;
+    let filtroOrdenBusqueda = null;
+    let clienteSeleccionadoId = null;
+    let vehiculoSeleccionadoId = null;
+    let pagoEditandoId = null;
+    let montoPagoAnterior = 0;
+    let deudaActual = null;
+    let pagosActuales = [];
 
     const modalOrden = document.getElementById('modal-orden');
     const formOrden = document.getElementById('form-orden');
@@ -10,8 +17,12 @@ $(function () {
     const seccionLineas = document.getElementById('seccion-lineas');
     const contenedorLineas = document.getElementById('contenedor-lineas');
     const totalPreview = document.getElementById('total-preview');
-    const selectCliente = document.getElementById('orden-cliente');
-    const selectVehiculo = document.getElementById('orden-vehiculo');
+    const inputBuscarCliente = document.getElementById('orden-buscar-cliente');
+    const divClienteSeleccionado = document.getElementById('orden-cliente-seleccionado');
+    const spanClienteSeleccionado = document.getElementById('orden-cliente-nombre');
+    const inputBuscarVehiculo = document.getElementById('orden-buscar-vehiculo');
+    const divVehiculoSeleccionado = document.getElementById('orden-vehiculo-seleccionado');
+    const spanVehiculoSeleccionado = document.getElementById('orden-vehiculo-nombre');
     const inputFechaIngreso = document.getElementById('orden-fechaIngreso');
     const inputFechaEntrega = document.getElementById('orden-fechaEntrega');
     const inputProblema = document.getElementById('orden-problema');
@@ -23,22 +34,34 @@ $(function () {
     const formDetalle = document.getElementById('form-detalle');
     const tituloDetalle = document.getElementById('modal-detalle-titulo');
     const modalEstado = document.getElementById('modal-estado');
+    const modalPago = document.getElementById('modal-pago');
+    const formPago = document.getElementById('form-pago');
+    const tituloPago = document.getElementById('modal-pago-titulo');
+    const inputPagoFecha = document.getElementById('pago-fecha');
+    const inputPagoMonto = document.getElementById('pago-monto');
+    const infoPago = document.getElementById('pago-info');
+    const pagoOrdenInfo = document.getElementById('pago-orden-info');
 
-    async function cargarSelects() {
-        try {
-            const [clientes, vehiculos] = await Promise.all([
-                fetchAll('/clientes'),
-                fetchAll('/vehiculos'),
-            ]);
-            selectCliente.innerHTML = '<option value="">Seleccione un cliente</option>' + clientes
-                .map((c) => `<option value="${c.id}">${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)} (${escapeHtml(c.dni)})</option>`)
-                .join('');
-            selectVehiculo.innerHTML = '<option value="">Seleccione un vehículo</option>' + vehiculos
-                .map((v) => `<option value="${v.id}">${escapeHtml(v.patente)} - ${escapeHtml(v.marca)} ${escapeHtml(v.modelo)} (${v.anio})</option>`)
-                .join('');
-        } catch (error) {
-            showApiError(error);
-        }
+    function mostrarClienteSeleccionado(texto) {
+        spanClienteSeleccionado.textContent = texto;
+        divClienteSeleccionado.classList.remove('d-none');
+    }
+
+    function limpiarClienteSeleccionado() {
+        clienteSeleccionadoId = null;
+        inputBuscarCliente.value = '';
+        divClienteSeleccionado.classList.add('d-none');
+    }
+
+    function mostrarVehiculoSeleccionado(texto) {
+        spanVehiculoSeleccionado.textContent = texto;
+        divVehiculoSeleccionado.classList.remove('d-none');
+    }
+
+    function limpiarVehiculoSeleccionado() {
+        vehiculoSeleccionadoId = null;
+        inputBuscarVehiculo.value = '';
+        divVehiculoSeleccionado.classList.add('d-none');
     }
 
     function crearFilaLinea(descripcion = '', cantidad = '', precio = '') {
@@ -125,12 +148,13 @@ $(function () {
         contenedorLineas.innerHTML = '';
     }
 
-    async function abrirNuevaOrden() {
-        await cargarSelects();
+    function abrirNuevaOrden() {
         editandoId = null;
         tituloOrden.textContent = 'Nueva orden de trabajo';
         seccionLineas.classList.remove('d-none');
         formOrden.reset();
+        limpiarClienteSeleccionado();
+        limpiarVehiculoSeleccionado();
         selectEstado.value = 'EN_REPARACION';
         inputFechaIngreso.value = isoToLocal(new Date().toISOString());
         contenedorLineas.innerHTML = '';
@@ -139,14 +163,24 @@ $(function () {
     }
 
     async function abrirEdicionOrden(id) {
-        await cargarSelects();
         try {
             const orden = await apiRequest(`/ordenes-trabajo/${id}`);
+            const [cliente, vehiculo] = await Promise.all([
+                apiRequest(`/clientes/${orden.cliente.id}`),
+                apiRequest(`/vehiculos/${orden.vehiculo.id}`),
+            ]);
             editandoId = orden.id;
             tituloOrden.textContent = `Editar orden N° ${orden.id}`;
             seccionLineas.classList.add('d-none');
-            selectCliente.value = orden.cliente.id;
-            selectVehiculo.value = orden.vehiculo.id;
+            formOrden.reset();
+            limpiarClienteSeleccionado();
+            limpiarVehiculoSeleccionado();
+            inputBuscarCliente.value = cliente.dni;
+            clienteSeleccionadoId = cliente.id;
+            mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
+            inputBuscarVehiculo.value = vehiculo.patente;
+            vehiculoSeleccionadoId = vehiculo.id;
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.anio})`);
             inputFechaIngreso.value = isoToLocal(orden.fechaIngreso);
             inputFechaEntrega.value = isoToLocal(orden.fechaEntrega);
             inputProblema.value = orden.problemaInformado;
@@ -166,21 +200,19 @@ $(function () {
             problemaInformado: inputProblema.value.trim(),
             diagnostico: inputDiagnostico.value.trim() || null,
             estado: selectEstado.value,
-            clienteId: Number(selectCliente.value),
-            vehiculoId: Number(selectVehiculo.value),
+            clienteId: clienteSeleccionadoId,
+            vehiculoId: vehiculoSeleccionadoId,
         };
         try {
             if (editandoId !== null) {
                 await apiRequest(`/ordenes-trabajo/${editandoId}`, { method: 'PUT', body: payload });
                 showToast('Orden actualizada correctamente');
             } else {
-            if (editandoId === null) {
                 const lineas = recolectarLineas();
                 if (lineas === null) {
                     return;
                 }
                 payload.detalles = lineas;
-            }
                 await apiRequest('/ordenes-trabajo', { method: 'POST', body: payload });
                 showToast('Orden creada correctamente');
             }
@@ -226,6 +258,34 @@ $(function () {
             </tr>`).join('');
     }
 
+    async function renderPagos(ordenId) {
+        const tbody = document.getElementById('tabla-pagos-body');
+        try {
+            const data = await apiRequest(`/pagos/orden/${ordenId}?page=0&size=100`);
+            pagosActuales = data.content || [];
+            if (pagosActuales.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Sin pagos</td></tr>';
+                return;
+            }
+            tbody.innerHTML = pagosActuales.map((p) => `
+                <tr>
+                    <td>${formatFecha(p.fechaPago)}</td>
+                    <td>${formatMoneda(p.cantidadPagada)}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary btn-accion" data-accion="editar-pago" data-id="${p.id}" title="Editar pago">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-accion" data-accion="eliminar-pago" data-id="${p.id}" title="Eliminar pago">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>`).join('');
+        } catch (error) {
+            pagosActuales = [];
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Sin pagos</td></tr>';
+        }
+    }
+
     function renderVerOrden(orden) {
         document.getElementById('ver-id').textContent = orden.id;
         document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido}`;
@@ -241,11 +301,19 @@ $(function () {
         renderDetalles(orden);
     }
 
+    async function refrescarOrdenActual() {
+        const orden = await apiRequest(`/ordenes-trabajo/${ordenActual.id}/detalle`);
+        ordenActual = orden;
+        renderVerOrden(orden);
+        await renderPagos(orden.id);
+    }
+
     async function verOrden(id) {
         try {
             const orden = await apiRequest(`/ordenes-trabajo/${id}/detalle`);
             ordenActual = orden;
             renderVerOrden(orden);
+            await renderPagos(orden.id);
             bootstrap.Modal.getOrCreateInstance(modalVer).show();
         } catch (error) {
             showApiError(error);
@@ -285,9 +353,7 @@ $(function () {
             }
             bootstrap.Modal.getOrCreateInstance(modalDetalle).hide();
             formDetalle.reset();
-            const orden = await apiRequest(`/ordenes-trabajo/${ordenActual.id}/detalle`);
-            ordenActual = orden;
-            renderVerOrden(orden);
+            await refrescarOrdenActual();
             tabla.ajax.reload();
         } catch (error) {
             showApiError(error);
@@ -299,9 +365,7 @@ $(function () {
             try {
                 await apiRequest(`/detalles-orden/${id}`, { method: 'DELETE' });
                 showToast('Detalle eliminado correctamente');
-                const orden = await apiRequest(`/ordenes-trabajo/${ordenActual.id}/detalle`);
-                ordenActual = orden;
-                renderVerOrden(orden);
+                await refrescarOrdenActual();
                 tabla.ajax.reload();
             } catch (error) {
                 showApiError(error);
@@ -338,11 +402,181 @@ $(function () {
         }
     }
 
+    function mostrarInfoPago(orden) {
+        deudaActual = Number(orden.deuda);
+        pagoOrdenInfo.value = `N° ${orden.id} - ${orden.cliente.nombre} ${orden.cliente.apellido} (${orden.vehiculo.patente})`;
+        infoPago.innerHTML = `
+            <div class="row mb-0">
+                <div class="col-4 text-muted small">Total</div>
+                <div class="col-4 text-muted small">Pagado</div>
+                <div class="col-4 text-muted small">Deuda</div>
+                <div class="col-4 fw-bold">${formatMoneda(orden.total)}</div>
+                <div class="col-4">${formatMoneda(orden.pagado)}</div>
+                <div class="col-4 fw-bold text-danger">${formatMoneda(deudaActual)}</div>
+            </div>`;
+        infoPago.classList.remove('d-none');
+    }
+
+    function abrirNuevoPago() {
+        if (!ordenActual) {
+            return;
+        }
+        pagoEditandoId = null;
+        montoPagoAnterior = 0;
+        tituloPago.textContent = 'Nuevo pago';
+        formPago.reset();
+        inputPagoFecha.value = isoToLocal(new Date().toISOString());
+        mostrarInfoPago(ordenActual);
+        bootstrap.Modal.getOrCreateInstance(modalPago).show();
+    }
+
+    function abrirEdicionPago(pago) {
+        if (!ordenActual) {
+            return;
+        }
+        pagoEditandoId = pago.id;
+        montoPagoAnterior = Number(pago.cantidadPagada);
+        tituloPago.textContent = `Editar pago N° ${pago.id}`;
+        inputPagoFecha.value = isoToLocal(pago.fechaPago);
+        inputPagoMonto.value = pago.cantidadPagada;
+        mostrarInfoPago(ordenActual);
+        bootstrap.Modal.getOrCreateInstance(modalPago).show();
+    }
+
+    function validarMontoPago() {
+        const monto = Number(inputPagoMonto.value);
+        const permitido = deudaActual + montoPagoAnterior;
+        if (monto > permitido + 0.001) {
+            showToast(`El monto no puede superar ${formatMoneda(permitido)}`, 'warning');
+            return false;
+        }
+        return true;
+    }
+
+    async function guardarPago() {
+        if (!validarMontoPago()) {
+            return;
+        }
+        const payload = {
+            fechaPago: localToIso(inputPagoFecha.value),
+            cantidadPagada: Number(inputPagoMonto.value),
+        };
+        try {
+            if (pagoEditandoId !== null) {
+                await apiRequest(`/pagos/${pagoEditandoId}`, { method: 'PUT', body: payload });
+                showToast('Pago actualizado correctamente');
+            } else {
+                payload.ordenTrabajoId = ordenActual.id;
+                await apiRequest('/pagos', { method: 'POST', body: payload });
+                showToast('Pago registrado correctamente');
+            }
+            bootstrap.Modal.getOrCreateInstance(modalPago).hide();
+            formPago.reset();
+            await refrescarOrdenActual();
+            tabla.ajax.reload();
+        } catch (error) {
+            showApiError(error);
+        }
+    }
+
+    function eliminarPago(id) {
+        confirmarEliminar('Eliminar pago', '¿Seguro que desea eliminar este pago?', async () => {
+            try {
+                await apiRequest(`/pagos/${id}`, { method: 'DELETE' });
+                showToast('Pago eliminado correctamente');
+                await refrescarOrdenActual();
+                tabla.ajax.reload();
+            } catch (error) {
+                showApiError(error);
+            }
+        });
+    }
+
+    document.getElementById('btn-buscar-cliente').addEventListener('click', async () => {
+        const dni = inputBuscarCliente.value.trim();
+        if (!dni) {
+            showToast('Ingrese un DNI para buscar el cliente', 'warning');
+            return;
+        }
+        try {
+            const cliente = await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
+            clienteSeleccionadoId = cliente.id;
+            mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
+        } catch (error) {
+            showToast('No se encontró un cliente con ese DNI', 'warning');
+            clienteSeleccionadoId = null;
+            divClienteSeleccionado.classList.add('d-none');
+        }
+    });
+
+    document.getElementById('btn-buscar-vehiculo').addEventListener('click', async () => {
+        const patente = inputBuscarVehiculo.value.trim();
+        if (!patente) {
+            showToast('Ingrese una patente para buscar el vehículo', 'warning');
+            return;
+        }
+        try {
+            const vehiculo = await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
+            vehiculoSeleccionadoId = vehiculo.id;
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.anio})`);
+        } catch (error) {
+            showToast('No se encontró un vehículo con esa patente', 'warning');
+            vehiculoSeleccionadoId = null;
+            divVehiculoSeleccionado.classList.add('d-none');
+        }
+    });
+
+    document.getElementById('btn-quitar-cliente').addEventListener('click', (event) => {
+        event.preventDefault();
+        limpiarClienteSeleccionado();
+    });
+
+    document.getElementById('btn-quitar-vehiculo').addEventListener('click', (event) => {
+        event.preventDefault();
+        limpiarVehiculoSeleccionado();
+    });
+
+    document.getElementById('btn-buscar-orden').addEventListener('click', async () => {
+        const dni = document.getElementById('buscar-orden-dni').value.trim();
+        const patente = document.getElementById('buscar-orden-patente').value.trim();
+        if (!dni && !patente) {
+            showToast('Ingrese un DNI o una patente para buscar', 'warning');
+            return;
+        }
+        try {
+            if (dni) {
+                await apiRequest(`/ordenes-trabajo/cliente/dni/${encodeURIComponent(dni)}`);
+                filtroOrdenBusqueda = { tipo: 'cliente', valor: dni };
+            } else {
+                await apiRequest(`/ordenes-trabajo/vehiculo/patente/${encodeURIComponent(patente)}`);
+                filtroOrdenBusqueda = { tipo: 'vehiculo', valor: patente };
+            }
+            tabla.ajax.reload();
+        } catch (error) {
+            showToast(dni ? 'No se encontró un cliente con ese DNI' : 'No se encontró un vehículo con esa patente', 'warning');
+        }
+    });
+
+    document.getElementById('btn-limpiar-orden').addEventListener('click', () => {
+        filtroOrdenBusqueda = null;
+        document.getElementById('buscar-orden-dni').value = '';
+        document.getElementById('buscar-orden-patente').value = '';
+        tabla.ajax.reload();
+    });
+
     formOrden.addEventListener('submit', (event) => {
         event.preventDefault();
         event.stopPropagation();
         formOrden.classList.add('was-validated');
         if (!formOrden.checkValidity()) {
+            return;
+        }
+        if (clienteSeleccionadoId === null) {
+            showToast('Debe buscar y seleccionar un cliente', 'warning');
+            return;
+        }
+        if (vehiculoSeleccionadoId === null) {
+            showToast('Debe buscar y seleccionar un vehículo', 'warning');
             return;
         }
         guardarOrden();
@@ -358,10 +592,21 @@ $(function () {
         guardarDetalle();
     });
 
+    formPago.addEventListener('submit', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        formPago.classList.add('was-validated');
+        if (!formPago.checkValidity()) {
+            return;
+        }
+        guardarPago();
+    });
+
     document.getElementById('btn-nueva-orden').addEventListener('click', abrirNuevaOrden);
     document.getElementById('btn-agregar-detalle').addEventListener('click', () => abrirModalDetalle(null));
     document.getElementById('btn-cambiar-estado').addEventListener('click', abrirModalEstado);
     document.getElementById('btn-guardar-estado').addEventListener('click', guardarEstado);
+    document.getElementById('btn-nuevo-pago').addEventListener('click', abrirNuevoPago);
 
     $('#tabla-ordenes').on('click', 'tbody button[data-accion]', function () {
         const id = Number(this.dataset.id);
@@ -388,24 +633,50 @@ $(function () {
         }
     });
 
+    $('#tabla-pagos-body').on('click', 'button[data-accion]', function () {
+        const id = Number(this.dataset.id);
+        const accion = this.dataset.accion;
+        if (accion === 'editar-pago') {
+            const pago = pagosActuales.find((p) => p.id === id);
+            if (pago) {
+                abrirEdicionPago(pago);
+            }
+        } else if (accion === 'eliminar-pago') {
+            eliminarPago(id);
+        }
+    });
+
     tabla = $('#tabla-ordenes').DataTable({
         serverSide: true,
         processing: true,
-        ajax: {
-            url: `${API_BASE_URL}/ordenes-trabajo`,
-            data: (d) => {
-                d.page = d.start / d.length;
-                d.size = d.length;
-                if (d.order && d.order.length) {
-                    d.sort = `${d.columns[d.order[0].column].data},${d.order[0].dir}`;
-                }
-            },
-            dataSrc: (json) => {
-                json.recordsTotal = json.totalElements;
-                json.recordsFiltered = json.totalElements;
-                return json.content;
-            },
-            error: mostrarErrorTabla,
+        searching: false,
+        ajax: (data, callback) => {
+            const responder = (json) => callback({
+                draw: data.draw,
+                recordsTotal: json.totalElements,
+                recordsFiltered: json.totalElements,
+                data: json.content || [],
+            });
+            const ruta = filtroOrdenBusqueda
+                ? filtroOrdenBusqueda.tipo === 'cliente'
+                    ? `/ordenes-trabajo/cliente/dni/${encodeURIComponent(filtroOrdenBusqueda.valor)}`
+                    : `/ordenes-trabajo/vehiculo/patente/${encodeURIComponent(filtroOrdenBusqueda.valor)}`
+                : '/ordenes-trabajo';
+            const params = { page: data.start / data.length, size: data.length };
+            if (data.order && data.order.length) {
+                params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
+            }
+            $.ajax({
+                url: `${API_BASE_URL}${ruta}`,
+                method: 'GET',
+                dataType: 'json',
+                data: params,
+                success: responder,
+                error: (xhr) => {
+                    mostrarErrorTabla(xhr);
+                    responder({ content: [], totalElements: 0 });
+                },
+            });
         },
         columns: [
             { data: 'id', title: 'ID' },
@@ -452,6 +723,4 @@ $(function () {
         },
         order: [[0, 'desc']],
     });
-
-    cargarSelects();
 });

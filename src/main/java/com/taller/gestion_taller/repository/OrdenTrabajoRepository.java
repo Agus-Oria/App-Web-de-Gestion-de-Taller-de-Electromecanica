@@ -15,6 +15,10 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     Page<OrdenTrabajo> findByVehiculoId(Long vehiculoId, Pageable pageable);
 
+    Page<OrdenTrabajo> findByClienteDni(String dni, Pageable pageable);
+
+    Page<OrdenTrabajo> findByVehiculoPatenteIgnoreCase(String patente, Pageable pageable);
+
     @EntityGraph(attributePaths = {"cliente", "vehiculo", "detalles"})
     @Query("select o from OrdenTrabajo o where o.id = :id")
     Optional<OrdenTrabajo> findWithDetallesById(@Param("id") Long id);

@@ -77,6 +77,19 @@ public class OrdenTrabajoService {
         return ordenTrabajoRepository.findByVehiculoId(vehiculoId, pageable).map(ordenTrabajoMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<OrdenTrabajoResponseDto> listarPorDniCliente(String dni, Pageable pageable) {
+        clienteService.buscarPorDni(dni);
+        return ordenTrabajoRepository.findByClienteDni(dni.trim(), pageable).map(ordenTrabajoMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrdenTrabajoResponseDto> listarPorPatenteVehiculo(String patente, Pageable pageable) {
+        vehiculoService.buscarPorPatente(patente);
+        return ordenTrabajoRepository.findByVehiculoPatenteIgnoreCase(patente.trim(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
+    }
+
     @Transactional
     public OrdenTrabajoResponseDto actualizar(Long id, OrdenTrabajoUpdateDto dto) {
         OrdenTrabajo ordenTrabajo = buscarEntidad(id);

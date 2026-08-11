@@ -1,6 +1,7 @@
 $(function () {
     let tabla;
     let editandoId = null;
+    let filtroPatente = null;
 
     const modalVehiculo = document.getElementById('modal-vehiculo');
     const formVehiculo = document.getElementById('form-vehiculo');
@@ -84,24 +85,59 @@ $(function () {
 
     document.getElementById('btn-nuevo-vehiculo').addEventListener('click', abrirNuevoVehiculo);
 
+    document.getElementById('btn-buscar-patente').addEventListener('click', async () => {
+        const patente = document.getElementById('buscar-vehiculo-patente').value.trim();
+        if (!patente) {
+            showToast('Ingrese una patente para buscar', 'warning');
+            return;
+        }
+        try {
+            await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
+            filtroPatente = patente;
+            tabla.ajax.reload();
+        } catch (error) {
+            showToast('No se encontró un vehículo con esa patente', 'warning');
+        }
+    });
+
+    document.getElementById('btn-limpiar-busqueda').addEventListener('click', () => {
+        filtroPatente = null;
+        document.getElementById('buscar-vehiculo-patente').value = '';
+        tabla.ajax.reload();
+    });
+
     tabla = $('#tabla-vehiculos').DataTable({
         serverSide: true,
         processing: true,
-        ajax: {
-            url: `${API_BASE_URL}/vehiculos`,
-            data: (d) => {
-                d.page = d.start / d.length;
-                d.size = d.length;
-                if (d.order && d.order.length) {
-                    d.sort = `${d.columns[d.order[0].column].data},${d.order[0].dir}`;
-                }
-            },
-            dataSrc: (json) => {
-                json.recordsTotal = json.totalElements;
-                json.recordsFiltered = json.totalElements;
-                return json.content;
-            },
-            error: mostrarErrorTabla,
+        searching: false,
+        ajax: (data, callback) => {
+            const responder = (json) => callback({
+                draw: data.draw,
+                recordsTotal: json.totalElements,
+                recordsFiltered: json.totalElements,
+                data: json.content || json.data || [],
+            });
+            if (filtroPatente) {
+                apiRequest(`/vehiculos/patente/${encodeURIComponent(filtroPatente)}`)
+                    .then((vehiculo) => responder({ content: [vehiculo], totalElements: 1 }))
+                    .catch(() => responder({ content: [], totalElements: 0 }));
+                return;
+            }
+            const params = { page: data.start / data.length, size: data.length };
+            if (data.order && data.order.length) {
+                params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
+            }
+            $.ajax({
+                url: `${API_BASE_URL}/vehiculos`,
+                method: 'GET',
+                dataType: 'json',
+                data: params,
+                success: (json) => responder(json),
+                error: (xhr) => {
+                    mostrarErrorTabla(xhr);
+                    responder({ content: [], totalElements: 0 });
+                },
+            });
         },
         columns: [
             { data: 'id', title: 'ID' },

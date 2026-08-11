@@ -21,6 +21,24 @@
                 </button>
             </div>
             <div class="card-body">
+                <div class="row g-2 mb-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1" for="buscar-orden-dni">Buscar por DNI</label>
+                        <input type="text" class="form-control" id="buscar-orden-dni" placeholder="DNI del cliente">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1" for="buscar-orden-patente">Buscar por patente</label>
+                        <input type="text" class="form-control" id="buscar-orden-patente" placeholder="Patente del vehículo">
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="button" class="btn btn-primary" id="btn-buscar-orden">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-limpiar-orden">
+                            <i class="bi bi-x-lg me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
                 <table id="tabla-ordenes" class="table table-striped table-hover w-100">
                     <thead>
                         <tr>
@@ -51,18 +69,30 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="orden-cliente" class="form-label">Cliente *</label>
-                                <select class="form-select" id="orden-cliente" required>
-                                    <option value="">Seleccione un cliente</option>
-                                </select>
-                                <div class="invalid-feedback">Debe seleccionar un cliente.</div>
+                                <label for="orden-buscar-cliente" class="form-label">Cliente *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="orden-buscar-cliente" placeholder="Buscar por DNI">
+                                    <button type="button" class="btn btn-outline-primary" id="btn-buscar-cliente" title="Buscar cliente">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text d-none" id="orden-cliente-seleccionado">
+                                    <i class="bi bi-person-check me-1"></i><span id="orden-cliente-nombre"></span>
+                                    <a href="#" class="link-secondary ms-1" id="btn-quitar-cliente">quitar</a>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="orden-vehiculo" class="form-label">Vehículo *</label>
-                                <select class="form-select" id="orden-vehiculo" required>
-                                    <option value="">Seleccione un vehículo</option>
-                                </select>
-                                <div class="invalid-feedback">Debe seleccionar un vehículo.</div>
+                                <label for="orden-buscar-vehiculo" class="form-label">Vehículo *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="orden-buscar-vehiculo" placeholder="Buscar por patente">
+                                    <button type="button" class="btn btn-outline-success" id="btn-buscar-vehiculo" title="Buscar vehículo">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text d-none" id="orden-vehiculo-seleccionado">
+                                    <i class="bi bi-car-front me-1"></i><span id="orden-vehiculo-nombre"></span>
+                                    <a href="#" class="link-secondary ms-1" id="btn-quitar-vehiculo">quitar</a>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -77,9 +107,8 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="orden-problema" class="form-label">Problema informado *</label>
-                            <textarea class="form-control" id="orden-problema" rows="2" maxlength="1000" required></textarea>
-                            <div class="invalid-feedback">El problema informado es obligatorio (máx. 1000 caracteres).</div>
+                            <label for="orden-problema" class="form-label">Problema informado</label>
+                            <textarea class="form-control" id="orden-problema" rows="2" maxlength="1000"></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="orden-diagnostico" class="form-label">Diagnóstico</label>
@@ -159,6 +188,25 @@
                         </table>
                     </div>
 
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                        <h6 class="mb-0">Pagos</h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" id="btn-nuevo-pago">
+                            <i class="bi bi-plus-lg me-1"></i>Nuevo pago
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Monto</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-pagos-body"></tbody>
+                        </table>
+                    </div>
+
                     <div class="row mt-3">
                         <div class="col-md-4 text-md-end"><strong>Total:</strong> <span id="ver-total"></span></div>
                         <div class="col-md-4 text-md-end"><strong>Pagado:</strong> <span id="ver-pagado"></span></div>
@@ -230,6 +278,39 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btn-guardar-estado">Guardar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-pago" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-pago" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-pago-titulo">Nuevo pago</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Orden de trabajo</label>
+                            <input type="text" class="form-control" id="pago-orden-info" disabled>
+                        </div>
+                        <div id="pago-info" class="alert alert-light border d-none mb-3"></div>
+                        <div class="mb-3">
+                            <label for="pago-fecha" class="form-label">Fecha de pago</label>
+                            <input type="datetime-local" class="form-control" id="pago-fecha">
+                        </div>
+                        <div class="mb-3">
+                            <label for="pago-monto" class="form-label">Monto *</label>
+                            <input type="number" class="form-control" id="pago-monto" min="0.01" step="0.01" required>
+                            <div class="invalid-feedback">El monto debe ser mayor a 0.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

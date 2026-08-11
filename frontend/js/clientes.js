@@ -1,6 +1,7 @@
 $(function () {
     let tabla;
     let editandoId = null;
+    let filtroDni = null;
 
     const modalCliente = document.getElementById('modal-cliente');
     const formCliente = document.getElementById('form-cliente');
@@ -84,24 +85,59 @@ $(function () {
 
     document.getElementById('btn-nuevo-cliente').addEventListener('click', abrirNuevoCliente);
 
+    document.getElementById('btn-buscar-cliente').addEventListener('click', async () => {
+        const dni = document.getElementById('buscar-cliente-dni').value.trim();
+        if (!dni) {
+            showToast('Ingrese un DNI para buscar', 'warning');
+            return;
+        }
+        try {
+            await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
+            filtroDni = dni;
+            tabla.ajax.reload();
+        } catch (error) {
+            showToast('No se encontró un cliente con ese DNI', 'warning');
+        }
+    });
+
+    document.getElementById('btn-limpiar-busqueda').addEventListener('click', () => {
+        filtroDni = null;
+        document.getElementById('buscar-cliente-dni').value = '';
+        tabla.ajax.reload();
+    });
+
     tabla = $('#tabla-clientes').DataTable({
         serverSide: true,
         processing: true,
-        ajax: {
-            url: `${API_BASE_URL}/clientes`,
-            data: (d) => {
-                d.page = d.start / d.length;
-                d.size = d.length;
-                if (d.order && d.order.length) {
-                    d.sort = `${d.columns[d.order[0].column].data},${d.order[0].dir}`;
-                }
-            },
-            dataSrc: (json) => {
-                json.recordsTotal = json.totalElements;
-                json.recordsFiltered = json.totalElements;
-                return json.content;
-            },
-            error: mostrarErrorTabla,
+        searching: false,
+        ajax: (data, callback) => {
+            const responder = (json) => callback({
+                draw: data.draw,
+                recordsTotal: json.totalElements,
+                recordsFiltered: json.totalElements,
+                data: json.content || json.data || [],
+            });
+            if (filtroDni) {
+                apiRequest(`/clientes/dni/${encodeURIComponent(filtroDni)}`)
+                    .then((cliente) => responder({ content: [cliente], totalElements: 1 }))
+                    .catch(() => responder({ content: [], totalElements: 0 }));
+                return;
+            }
+            const params = { page: data.start / data.length, size: data.length };
+            if (data.order && data.order.length) {
+                params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
+            }
+            $.ajax({
+                url: `${API_BASE_URL}/clientes`,
+                method: 'GET',
+                dataType: 'json',
+                data: params,
+                success: (json) => responder(json),
+                error: (xhr) => {
+                    mostrarErrorTabla(xhr);
+                    responder({ content: [], totalElements: 0 });
+                },
+            });
         },
         columns: [
             { data: 'id', title: 'ID' },

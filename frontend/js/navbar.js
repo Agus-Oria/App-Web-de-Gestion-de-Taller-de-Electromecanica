@@ -4,7 +4,6 @@
         { href: 'clientes.html', label: 'Clientes', icon: 'bi-people' },
         { href: 'vehiculos.html', label: 'Vehículos', icon: 'bi-car-front' },
         { href: 'ordenes.html', label: 'Órdenes de trabajo', icon: 'bi-tools' },
-        { href: 'pagos.html', label: 'Pagos', icon: 'bi-cash-coin' },
     ];
     const actual = window.location.pathname.split('/').pop() || 'index.html';
     const contenedor = document.getElementById('app-navbar');

@@ -79,6 +79,22 @@ public class OrdenTrabajoController {
         return ResponseEntity.ok(ordenTrabajoService.listarPorVehiculo(vehiculoId, pageable));
     }
 
+    @GetMapping("/cliente/dni/{dni}")
+    @Operation(summary = "Listar ordenes de trabajo por DNI del cliente")
+    public ResponseEntity<Page<OrdenTrabajoResponseDto>> listarPorDniCliente(
+            @PathVariable String dni,
+            Pageable pageable) {
+        return ResponseEntity.ok(ordenTrabajoService.listarPorDniCliente(dni, pageable));
+    }
+
+    @GetMapping("/vehiculo/patente/{patente}")
+    @Operation(summary = "Listar ordenes de trabajo por patente del vehiculo")
+    public ResponseEntity<Page<OrdenTrabajoResponseDto>> listarPorPatenteVehiculo(
+            @PathVariable String patente,
+            Pageable pageable) {
+        return ResponseEntity.ok(ordenTrabajoService.listarPorPatenteVehiculo(patente, pageable));
+    }
+
     @PatchMapping("/{id}/estado")
     @Operation(summary = "Cambiar estado de orden de trabajo")
     public ResponseEntity<OrdenTrabajoResponseDto> cambiarEstado(
