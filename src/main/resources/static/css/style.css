@@ -22,3 +22,18 @@ main.container {
 .badge {
     font-weight: 500;
 }
+
+.imagen-orden img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.imagen-orden .btn-accion-imagen {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 0.15rem 0.35rem;
+    line-height: 1;
+}

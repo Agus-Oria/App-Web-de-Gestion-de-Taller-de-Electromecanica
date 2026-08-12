@@ -66,4 +66,7 @@ public class OrdenTrabajo {
 
     @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pago> pagos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImagenOrden> imagenes = new ArrayList<>();
 }

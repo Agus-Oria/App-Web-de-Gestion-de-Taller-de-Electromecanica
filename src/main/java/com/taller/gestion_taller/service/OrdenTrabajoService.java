@@ -11,7 +11,9 @@ import com.taller.gestion_taller.exception.BadRequestException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.OrdenTrabajoMapper;
 import com.taller.gestion_taller.repository.OrdenTrabajoRepository;
+import com.taller.gestion_taller.storage.ImagenStorage;
 import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
+import java.io.IOException;
 import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,18 +28,21 @@ public class OrdenTrabajoService {
     private final VehiculoService vehiculoService;
     private final OrdenTrabajoMapper ordenTrabajoMapper;
     private final OrdenTrabajoCalculator calculator;
+    private final ImagenStorage imagenStorage;
 
     public OrdenTrabajoService(
             OrdenTrabajoRepository ordenTrabajoRepository,
             ClienteService clienteService,
             VehiculoService vehiculoService,
             OrdenTrabajoMapper ordenTrabajoMapper,
-            OrdenTrabajoCalculator calculator) {
+            OrdenTrabajoCalculator calculator,
+            ImagenStorage imagenStorage) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.clienteService = clienteService;
         this.vehiculoService = vehiculoService;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.calculator = calculator;
+        this.imagenStorage = imagenStorage;
     }
 
     @Transactional
@@ -112,6 +117,11 @@ public class OrdenTrabajoService {
     public void eliminar(Long id) {
         OrdenTrabajo ordenTrabajo = buscarEntidad(id);
         ordenTrabajoRepository.delete(ordenTrabajo);
+        try {
+            imagenStorage.eliminarCarpeta(imagenStorage.carpetaOrden(id));
+        } catch (IOException exception) {
+            throw new BadRequestException("No se pudieron eliminar las imagenes de la orden");
+        }
     }
 
     @Transactional(readOnly = true)

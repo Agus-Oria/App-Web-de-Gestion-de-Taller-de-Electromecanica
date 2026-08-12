@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -53,6 +54,13 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException exception,
             HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, "El cuerpo de la solicitud no es valido", request, null);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleMaxUploadSize(
+            MaxUploadSizeExceededException exception,
+            HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "El archivo supera el tamanio maximo permitido", request, null);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

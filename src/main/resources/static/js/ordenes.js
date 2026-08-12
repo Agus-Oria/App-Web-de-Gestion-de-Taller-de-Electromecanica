@@ -10,6 +10,7 @@ $(function () {
     let montoPagoAnterior = 0;
     let deudaActual = null;
     let pagosActuales = [];
+    let imagenesActuales = [];
 
     const modalOrden = document.getElementById('modal-orden');
     const formOrden = document.getElementById('form-orden');
@@ -42,6 +43,10 @@ $(function () {
     const selectPagoMetodo = document.getElementById('pago-metodo');
     const infoPago = document.getElementById('pago-info');
     const pagoOrdenInfo = document.getElementById('pago-orden-info');
+    const inputImagenesOrden = document.getElementById('orden-imagenes');
+    const btnAgregarImagenes = document.getElementById('btn-agregar-imagenes');
+    const inputImagenesVer = document.getElementById('imagenes-archivos');
+    const contenedorImagenes = document.getElementById('contenedor-imagenes');
 
     function mostrarClienteSeleccionado(texto) {
         spanClienteSeleccionado.textContent = texto;
@@ -146,6 +151,7 @@ $(function () {
     function cerrarModalOrden() {
         bootstrap.Modal.getOrCreateInstance(modalOrden).hide();
         formOrden.reset();
+        inputImagenesOrden.value = '';
         contenedorLineas.innerHTML = '';
     }
 
@@ -205,6 +211,7 @@ $(function () {
             vehiculoId: vehiculoSeleccionadoId,
         };
         try {
+            let ordenId = editandoId;
             if (editandoId !== null) {
                 await apiRequest(`/ordenes-trabajo/${editandoId}`, { method: 'PUT', body: payload });
                 showToast('Orden actualizada correctamente');
@@ -214,8 +221,12 @@ $(function () {
                     return;
                 }
                 payload.detalles = lineas;
-                await apiRequest('/ordenes-trabajo', { method: 'POST', body: payload });
+                const orden = await apiRequest('/ordenes-trabajo', { method: 'POST', body: payload });
+                ordenId = orden.id;
                 showToast('Orden creada correctamente');
+            }
+            if (ordenId !== null && inputImagenesOrden.files && inputImagenesOrden.files.length) {
+                await subirImagenes(ordenId, inputImagenesOrden.files);
             }
             cerrarModalOrden();
             tabla.ajax.reload();
@@ -288,6 +299,53 @@ $(function () {
         }
     }
 
+    async function subirImagenes(ordenId, archivos) {
+        if (!archivos || !archivos.length) {
+            return;
+        }
+        const formData = new FormData();
+        Array.from(archivos).forEach((archivo) => formData.append('imagenes', archivo));
+        const response = await fetch(`${API_BASE_URL}/ordenes-trabajo/${ordenId}/imagenes`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => null);
+            throw new Error(data && data.message ? data.message : 'Error al subir las imágenes');
+        }
+    }
+
+    async function renderImagenes(ordenId) {
+        try {
+            imagenesActuales = await apiRequest(`/ordenes-trabajo/${ordenId}/imagenes`);
+        } catch (error) {
+            imagenesActuales = [];
+        }
+        if (!imagenesActuales.length) {
+            contenedorImagenes.innerHTML = '<div class="text-muted">Sin imágenes</div>';
+            return;
+        }
+        contenedorImagenes.innerHTML = imagenesActuales.map((img) => `
+            <div class="imagen-orden position-relative">
+                <img src="${img.ruta}" class="img-thumbnail" alt="Imagen de la orden" data-accion="ver-imagen" data-ruta="${img.ruta}" title="Abrir imagen">
+                <button type="button" class="btn btn-sm btn-danger btn-accion-imagen" data-accion="eliminar-imagen" data-id="${img.id}" title="Eliminar imagen">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>`).join('');
+    }
+
+    function eliminarImagen(id) {
+        confirmarEliminar('Eliminar imagen', '¿Seguro que desea eliminar esta imagen?', async () => {
+            try {
+                await apiRequest(`/imagenes/${id}`, { method: 'DELETE' });
+                showToast('Imagen eliminada correctamente');
+                await renderImagenes(ordenActual.id);
+            } catch (error) {
+                showApiError(error);
+            }
+        });
+    }
+
     function renderVerOrden(orden) {
         document.getElementById('ver-id').textContent = orden.id;
         document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido}`;
@@ -308,6 +366,7 @@ $(function () {
         ordenActual = orden;
         renderVerOrden(orden);
         await renderPagos(orden.id);
+        await renderImagenes(orden.id);
     }
 
     async function verOrden(id) {
@@ -316,6 +375,7 @@ $(function () {
             ordenActual = orden;
             renderVerOrden(orden);
             await renderPagos(orden.id);
+            await renderImagenes(orden.id);
             bootstrap.Modal.getOrCreateInstance(modalVer).show();
         } catch (error) {
             showApiError(error);
@@ -611,6 +671,61 @@ $(function () {
     document.getElementById('btn-cambiar-estado').addEventListener('click', abrirModalEstado);
     document.getElementById('btn-guardar-estado').addEventListener('click', guardarEstado);
     document.getElementById('btn-nuevo-pago').addEventListener('click', abrirNuevoPago);
+
+    inputImagenesOrden.addEventListener('change', () => {
+        const archivos = Array.from(inputImagenesOrden.files || []);
+        if (!archivos.length) {
+            return;
+        }
+        if (archivos.length > 6) {
+            showToast('Máximo 6 imágenes por orden', 'warning');
+            inputImagenesOrden.value = '';
+            return;
+        }
+        if (archivos.some((archivo) => archivo.size > 5 * 1024 * 1024)) {
+            showToast('Alguna imagen supera los 5 MB', 'warning');
+            inputImagenesOrden.value = '';
+        }
+    });
+
+    btnAgregarImagenes.addEventListener('click', () => inputImagenesVer.click());
+
+    inputImagenesVer.addEventListener('change', async () => {
+        const archivos = Array.from(inputImagenesVer.files || []);
+        if (!archivos.length) {
+            return;
+        }
+        if (imagenesActuales.length + archivos.length > 6) {
+            showToast(`Máximo 6 imágenes (actuales: ${imagenesActuales.length})`, 'warning');
+            inputImagenesVer.value = '';
+            return;
+        }
+        if (archivos.some((archivo) => archivo.size > 5 * 1024 * 1024)) {
+            showToast('Alguna imagen supera los 5 MB', 'warning');
+            inputImagenesVer.value = '';
+            return;
+        }
+        try {
+            await subirImagenes(ordenActual.id, archivos);
+            showToast('Imágenes agregadas correctamente');
+            inputImagenesVer.value = '';
+            await renderImagenes(ordenActual.id);
+        } catch (error) {
+            showApiError(error);
+        }
+    });
+
+    contenedorImagenes.addEventListener('click', (event) => {
+        const elemento = event.target.closest('[data-accion]');
+        if (!elemento) {
+            return;
+        }
+        if (elemento.dataset.accion === 'ver-imagen') {
+            window.open(elemento.dataset.ruta, '_blank');
+        } else if (elemento.dataset.accion === 'eliminar-imagen') {
+            eliminarImagen(Number(elemento.dataset.id));
+        }
+    });
 
     $('#tabla-ordenes').on('click', 'tbody button[data-accion]', function () {
         const id = Number(this.dataset.id);
