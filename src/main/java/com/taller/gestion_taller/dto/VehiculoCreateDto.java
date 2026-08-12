@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 public record VehiculoCreateDto(
         @NotBlank @Size(max = 20) String patente,
-        @NotBlank @Size(max = 80) String marca,
+        @NotNull Long marcaId,
         @NotBlank @Size(max = 80) String modelo,
         @NotNull @Min(1900) @Max(2100) Integer anio
 ) {

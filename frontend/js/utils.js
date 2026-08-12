@@ -65,6 +65,19 @@ function estadoBadge(estado) {
     return `<span class="badge ${clases[estado] || 'bg-secondary'}">${ESTADOS[estado] || estado}</span>`;
 }
 
+const METODOS_PAGO = {
+    EFECTIVO: 'Efectivo',
+    TARJETA_DEBITO: 'Tarjeta de débito',
+    TARJETA_CREDITO: 'Tarjeta de crédito',
+    TRANSFERENCIA: 'Transferencia',
+    MERCADO_PAGO: 'Mercado Pago',
+    CHEQUE: 'Cheque',
+};
+
+function metodoPagoLabel(metodo) {
+    return METODOS_PAGO[metodo] || metodo;
+}
+
 function escapeHtml(valor) {
     return String(valor === null || valor === undefined ? '' : valor)
         .replace(/&/g, '&amp;')

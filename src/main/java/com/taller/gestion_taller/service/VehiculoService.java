@@ -3,6 +3,7 @@ package com.taller.gestion_taller.service;
 import com.taller.gestion_taller.dto.VehiculoCreateDto;
 import com.taller.gestion_taller.dto.VehiculoResponseDto;
 import com.taller.gestion_taller.dto.VehiculoUpdateDto;
+import com.taller.gestion_taller.entity.Marca;
 import com.taller.gestion_taller.entity.Vehiculo;
 import com.taller.gestion_taller.exception.DuplicateResourceException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
@@ -18,16 +19,22 @@ public class VehiculoService {
 
     private final VehiculoRepository vehiculoRepository;
     private final VehiculoMapper vehiculoMapper;
+    private final MarcaService marcaService;
 
-    public VehiculoService(VehiculoRepository vehiculoRepository, VehiculoMapper vehiculoMapper) {
+    public VehiculoService(
+            VehiculoRepository vehiculoRepository,
+            VehiculoMapper vehiculoMapper,
+            MarcaService marcaService) {
         this.vehiculoRepository = vehiculoRepository;
         this.vehiculoMapper = vehiculoMapper;
+        this.marcaService = marcaService;
     }
 
     @Transactional
     public VehiculoResponseDto crear(VehiculoCreateDto dto) {
         validarPatenteDisponible(vehiculoMapper.normalizarPatente(dto.patente()));
-        return vehiculoMapper.toResponse(vehiculoRepository.save(vehiculoMapper.toEntity(dto)));
+        Marca marca = marcaService.buscarEntidad(dto.marcaId());
+        return vehiculoMapper.toResponse(vehiculoRepository.save(vehiculoMapper.toEntity(dto, marca)));
     }
 
     @Transactional(readOnly = true)
@@ -53,7 +60,8 @@ public class VehiculoService {
         if (vehiculoRepository.existsByPatenteIgnoreCaseAndIdNot(patente, id)) {
             throw new DuplicateResourceException("Ya existe un vehiculo con patente " + patente);
         }
-        vehiculoMapper.updateEntity(vehiculo, dto);
+        Marca marca = marcaService.buscarEntidad(dto.marcaId());
+        vehiculoMapper.updateEntity(vehiculo, dto, marca);
         return vehiculoMapper.toResponse(vehiculoRepository.save(vehiculo));
     }
 

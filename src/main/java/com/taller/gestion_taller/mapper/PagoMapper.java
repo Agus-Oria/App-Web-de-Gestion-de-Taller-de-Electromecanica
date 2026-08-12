@@ -14,12 +14,14 @@ public class PagoMapper {
         Pago pago = new Pago();
         pago.setFechaPago(dto.fechaPago() == null ? Instant.now() : dto.fechaPago());
         pago.setCantidadPagada(dto.cantidadPagada());
+        pago.setMetodoPago(dto.metodoPago());
         return pago;
     }
 
     public void updateEntity(Pago pago, PagoUpdateDto dto) {
         pago.setFechaPago(dto.fechaPago() == null ? Instant.now() : dto.fechaPago());
         pago.setCantidadPagada(dto.cantidadPagada());
+        pago.setMetodoPago(dto.metodoPago());
     }
 
     public PagoResponseDto toResponse(Pago pago) {
@@ -27,6 +29,7 @@ public class PagoMapper {
                 pago.getId(),
                 pago.getFechaPago(),
                 pago.getCantidadPagada(),
+                pago.getMetodoPago(),
                 pago.getOrdenTrabajo().getId());
     }
 }

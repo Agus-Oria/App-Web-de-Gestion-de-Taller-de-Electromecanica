@@ -2,6 +2,8 @@ package com.taller.gestion_taller.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,6 +33,10 @@ public class Pago {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal cantidadPagada;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private MetodoPago metodoPago;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "orden_trabajo_id", nullable = false)

@@ -200,6 +200,7 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Monto</th>
+                                    <th>Método</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -304,6 +305,18 @@
                             <label for="pago-monto" class="form-label">Monto *</label>
                             <input type="number" class="form-control" id="pago-monto" min="0.01" step="0.01" required>
                             <div class="invalid-feedback">El monto debe ser mayor a 0.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pago-metodo" class="form-label">Método de pago *</label>
+                            <select class="form-select" id="pago-metodo" required>
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TARJETA_DEBITO">Tarjeta de débito</option>
+                                <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
+                                <option value="TRANSFERENCIA">Transferencia</option>
+                                <option value="MERCADO_PAGO">Mercado Pago</option>
+                                <option value="CHEQUE">Cheque</option>
+                            </select>
+                            <div class="invalid-feedback">Seleccione un método de pago.</div>
                         </div>
                     </div>
                     <div class="modal-footer">

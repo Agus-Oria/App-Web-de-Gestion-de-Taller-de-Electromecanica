@@ -6,6 +6,18 @@ $(function () {
     const modalVehiculo = document.getElementById('modal-vehiculo');
     const formVehiculo = document.getElementById('form-vehiculo');
     const tituloModal = document.getElementById('modal-vehiculo-titulo');
+    const selectMarca = document.getElementById('vehiculo-marca');
+
+    async function cargarMarcas() {
+        try {
+            const marcas = await apiRequest('/marcas');
+            selectMarca.innerHTML = '<option value="">Seleccione una marca</option>' + marcas
+                .map((m) => `<option value="${m.id}">${escapeHtml(m.nombre)}</option>`)
+                .join('');
+        } catch (error) {
+            showApiError(error);
+        }
+    }
 
     function abrirModalVehiculo() {
         formVehiculo.classList.remove('was-validated');
@@ -30,7 +42,7 @@ $(function () {
             editandoId = vehiculo.id;
             tituloModal.textContent = 'Editar vehículo';
             document.getElementById('vehiculo-patente').value = vehiculo.patente;
-            document.getElementById('vehiculo-marca').value = vehiculo.marca;
+            selectMarca.value = vehiculo.marca ? vehiculo.marca.id : '';
             document.getElementById('vehiculo-modelo').value = vehiculo.modelo;
             document.getElementById('vehiculo-anio').value = vehiculo.anio;
             abrirModalVehiculo();
@@ -42,7 +54,7 @@ $(function () {
     async function guardarVehiculo() {
         const payload = {
             patente: document.getElementById('vehiculo-patente').value.trim(),
-            marca: document.getElementById('vehiculo-marca').value.trim(),
+            marcaId: Number(selectMarca.value),
             modelo: document.getElementById('vehiculo-modelo').value.trim(),
             anio: Number(document.getElementById('vehiculo-anio').value),
         };
@@ -84,6 +96,7 @@ $(function () {
     });
 
     document.getElementById('btn-nuevo-vehiculo').addEventListener('click', abrirNuevoVehiculo);
+    cargarMarcas();
 
     document.getElementById('btn-buscar-patente').addEventListener('click', async () => {
         const patente = document.getElementById('buscar-vehiculo-patente').value.trim();
@@ -142,7 +155,7 @@ $(function () {
         columns: [
             { data: 'id', title: 'ID' },
             { data: 'patente', title: 'Patente', render: (data) => escapeHtml(data) },
-            { data: 'marca', title: 'Marca', render: (data) => escapeHtml(data) },
+            { data: 'marca.nombre', title: 'Marca', render: (data) => escapeHtml(data) },
             { data: 'modelo', title: 'Modelo', render: (data) => escapeHtml(data) },
             { data: 'anio', title: 'Año' },
             {

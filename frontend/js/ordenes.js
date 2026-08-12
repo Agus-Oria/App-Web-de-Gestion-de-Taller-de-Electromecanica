@@ -39,6 +39,7 @@ $(function () {
     const tituloPago = document.getElementById('modal-pago-titulo');
     const inputPagoFecha = document.getElementById('pago-fecha');
     const inputPagoMonto = document.getElementById('pago-monto');
+    const selectPagoMetodo = document.getElementById('pago-metodo');
     const infoPago = document.getElementById('pago-info');
     const pagoOrdenInfo = document.getElementById('pago-orden-info');
 
@@ -180,7 +181,7 @@ $(function () {
             mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
             inputBuscarVehiculo.value = vehiculo.patente;
             vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.anio})`);
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})`);
             inputFechaIngreso.value = isoToLocal(orden.fechaIngreso);
             inputFechaEntrega.value = isoToLocal(orden.fechaEntrega);
             inputProblema.value = orden.problemaInformado;
@@ -264,13 +265,14 @@ $(function () {
             const data = await apiRequest(`/pagos/orden/${ordenId}?page=0&size=100`);
             pagosActuales = data.content || [];
             if (pagosActuales.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Sin pagos</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin pagos</td></tr>';
                 return;
             }
             tbody.innerHTML = pagosActuales.map((p) => `
                 <tr>
                     <td>${formatFecha(p.fechaPago)}</td>
                     <td>${formatMoneda(p.cantidadPagada)}</td>
+                    <td>${metodoPagoLabel(p.metodoPago)}</td>
                     <td class="text-end">
                         <button type="button" class="btn btn-sm btn-outline-primary btn-accion" data-accion="editar-pago" data-id="${p.id}" title="Editar pago">
                             <i class="bi bi-pencil"></i>
@@ -282,14 +284,14 @@ $(function () {
                 </tr>`).join('');
         } catch (error) {
             pagosActuales = [];
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Sin pagos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin pagos</td></tr>';
         }
     }
 
     function renderVerOrden(orden) {
         document.getElementById('ver-id').textContent = orden.id;
         document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido}`;
-        document.getElementById('ver-vehiculo').textContent = `${orden.vehiculo.patente} - ${orden.vehiculo.marca} ${orden.vehiculo.modelo} (${orden.vehiculo.anio})`;
+        document.getElementById('ver-vehiculo').textContent = `${orden.vehiculo.patente} - ${orden.vehiculo.marca.nombre} ${orden.vehiculo.modelo} (${orden.vehiculo.anio})`;
         document.getElementById('ver-fechaIngreso').textContent = formatFecha(orden.fechaIngreso);
         document.getElementById('ver-fechaEntrega').textContent = formatFecha(orden.fechaEntrega);
         document.getElementById('ver-problema').textContent = orden.problemaInformado;
@@ -439,6 +441,7 @@ $(function () {
         tituloPago.textContent = `Editar pago N° ${pago.id}`;
         inputPagoFecha.value = isoToLocal(pago.fechaPago);
         inputPagoMonto.value = pago.cantidadPagada;
+        selectPagoMetodo.value = pago.metodoPago || 'EFECTIVO';
         mostrarInfoPago(ordenActual);
         bootstrap.Modal.getOrCreateInstance(modalPago).show();
     }
@@ -460,6 +463,7 @@ $(function () {
         const payload = {
             fechaPago: localToIso(inputPagoFecha.value),
             cantidadPagada: Number(inputPagoMonto.value),
+            metodoPago: selectPagoMetodo.value,
         };
         try {
             if (pagoEditandoId !== null) {
@@ -518,7 +522,7 @@ $(function () {
         try {
             const vehiculo = await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
             vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.anio})`);
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})`);
         } catch (error) {
             showToast('No se encontró un vehículo con esa patente', 'warning');
             vehiculoSeleccionadoId = null;
@@ -690,7 +694,7 @@ $(function () {
                 data: 'vehiculo',
                 title: 'Vehículo',
                 orderable: false,
-                render: (data) => `${escapeHtml(data.patente)} - ${escapeHtml(data.marca)} ${escapeHtml(data.modelo)}`,
+                render: (data) => `${escapeHtml(data.patente)} - ${escapeHtml(data.marca.nombre)} ${escapeHtml(data.modelo)}`,
             },
             { data: 'estado', title: 'Estado', render: (data) => estadoBadge(data) },
             { data: 'total', title: 'Total', render: (data) => formatMoneda(data) },

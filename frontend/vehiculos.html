@@ -68,8 +68,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="vehiculo-marca" class="form-label">Marca *</label>
-                            <input type="text" class="form-control" id="vehiculo-marca" maxlength="80" required>
-                            <div class="invalid-feedback">La marca es obligatoria (máx. 80 caracteres).</div>
+                            <select class="form-select" id="vehiculo-marca" required>
+                                <option value="">Seleccione una marca</option>
+                            </select>
+                            <div class="invalid-feedback">Seleccione una marca.</div>
                         </div>
                         <div class="mb-3">
                             <label for="vehiculo-modelo" class="form-label">Modelo *</label>
