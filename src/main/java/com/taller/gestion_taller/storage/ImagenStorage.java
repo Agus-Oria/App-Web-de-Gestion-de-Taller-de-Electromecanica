@@ -4,16 +4,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class ImagenStorage {
 
+    private final Path directorioRaiz;
+
+    public ImagenStorage(@Value("${app.imagenes.directorio}") String directorio) {
+        this.directorioRaiz = Paths.get(directorio).toAbsolutePath().normalize();
+    }
+
     public Path carpetaOrden(Long ordenTrabajoId) {
-        return Paths.get("src/main/resources/static/uploads/ordenes", String.valueOf(ordenTrabajoId))
-                .toAbsolutePath()
-                .normalize();
+        return directorioRaiz.resolve("ordenes").resolve(String.valueOf(ordenTrabajoId));
     }
 
     public void crearCarpeta(Path carpeta) throws IOException {
