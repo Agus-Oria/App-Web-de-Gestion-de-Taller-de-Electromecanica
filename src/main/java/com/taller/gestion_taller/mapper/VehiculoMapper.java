@@ -20,7 +20,7 @@ public class VehiculoMapper {
         Vehiculo vehiculo = new Vehiculo();
         vehiculo.setPatente(normalizarPatente(dto.patente()));
         vehiculo.setMarca(marca);
-        vehiculo.setModelo(dto.modelo());
+        vehiculo.setModelo(normalizarModelo(dto.modelo()));
         vehiculo.setAnio(dto.anio());
         return vehiculo;
     }
@@ -28,7 +28,7 @@ public class VehiculoMapper {
     public void updateEntity(Vehiculo vehiculo, VehiculoUpdateDto dto, Marca marca) {
         vehiculo.setPatente(normalizarPatente(dto.patente()));
         vehiculo.setMarca(marca);
-        vehiculo.setModelo(dto.modelo());
+        vehiculo.setModelo(normalizarModelo(dto.modelo()));
         vehiculo.setAnio(dto.anio());
     }
 
@@ -43,5 +43,9 @@ public class VehiculoMapper {
 
     public String normalizarPatente(String patente) {
         return patente.trim().toUpperCase();
+    }
+
+    public String normalizarModelo(String modelo) {
+        return modelo.trim().toUpperCase();
     }
 }

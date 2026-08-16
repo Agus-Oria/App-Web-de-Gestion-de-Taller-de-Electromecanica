@@ -5,6 +5,7 @@ import com.taller.gestion_taller.dto.OrdenTrabajoCreateDto;
 import com.taller.gestion_taller.dto.OrdenTrabajoResponseDto;
 import com.taller.gestion_taller.dto.OrdenTrabajoUpdateDto;
 import com.taller.gestion_taller.entity.Cliente;
+import com.taller.gestion_taller.entity.EstadoOrden;
 import com.taller.gestion_taller.entity.OrdenTrabajo;
 import com.taller.gestion_taller.entity.Vehiculo;
 import com.taller.gestion_taller.exception.BadRequestException;
@@ -15,6 +16,7 @@ import com.taller.gestion_taller.storage.ImagenStorage;
 import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,9 @@ public class OrdenTrabajoService {
         Cliente cliente = clienteService.buscarEntidad(dto.clienteId());
         Vehiculo vehiculo = vehiculoService.buscarEntidad(dto.vehiculoId());
         OrdenTrabajo ordenTrabajo = ordenTrabajoMapper.toEntity(dto, cliente, vehiculo);
+        if (ordenTrabajo.getEstado() == EstadoOrden.FINALIZADA) {
+            ordenTrabajo.setFechaEntrega(Instant.now());
+        }
         calculator.recalcularTotales(ordenTrabajo);
         validarPagosNoSuperenTotal(ordenTrabajo);
         return ordenTrabajoMapper.toResponse(ordenTrabajoRepository.save(ordenTrabajo));
@@ -110,6 +115,9 @@ public class OrdenTrabajoService {
     public OrdenTrabajoResponseDto cambiarEstado(Long id, CambioEstadoOrdenDto dto) {
         OrdenTrabajo ordenTrabajo = buscarEntidad(id);
         ordenTrabajo.setEstado(dto.estado());
+        if (dto.estado() == EstadoOrden.FINALIZADA) {
+            ordenTrabajo.setFechaEntrega(Instant.now());
+        }
         return ordenTrabajoMapper.toResponse(ordenTrabajoRepository.save(ordenTrabajo));
     }
 
