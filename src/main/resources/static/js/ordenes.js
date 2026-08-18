@@ -678,7 +678,7 @@ $(function () {
             return;
         }
         try {
-            await descargarPdf(`/ordenes-trabajo/${ordenActual.id}/pdf`, `orden-${ordenActual.id}.pdf`);
+            await abrirPdf(`/ordenes-trabajo/${ordenActual.id}/pdf`);
         } catch (error) {
             showApiError(error);
         }

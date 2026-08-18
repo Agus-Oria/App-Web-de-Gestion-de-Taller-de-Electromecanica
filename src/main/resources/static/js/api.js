@@ -77,7 +77,8 @@ async function apiRequest(path, options = {}) {
     return data;
 }
 
-async function descargarPdf(path, nombreArchivo) {
+async function abrirPdf(path) {
+    const ventana = window.open('', '_blank');
     const url = path.startsWith('http') ? path : API_BASE_URL + path;
     const token = getToken();
     const headers = {};
@@ -86,24 +87,25 @@ async function descargarPdf(path, nombreArchivo) {
     }
     const response = await fetch(url, { headers });
     if (response.status === 401) {
+        if (ventana) {
+            ventana.close();
+        }
         irALogin();
         return;
     }
     if (!response.ok) {
         const data = await response.json().catch(() => null);
-        const error = new Error(data && data.message ? data.message : 'Error al descargar el archivo');
+        if (ventana) {
+            ventana.close();
+        }
+        const error = new Error(data && data.message ? data.message : 'Error al abrir el archivo');
         error.status = response.status;
         throw error;
     }
     const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
-    enlace.href = objectUrl;
-    enlace.download = nombreArchivo;
-    document.body.appendChild(enlace);
-    enlace.click();
-    enlace.remove();
-    URL.revokeObjectURL(objectUrl);
+    if (ventana) {
+        ventana.location.href = URL.createObjectURL(blob);
+    }
 }
 
 async function fetchAll(path, pageSize = 100) {
