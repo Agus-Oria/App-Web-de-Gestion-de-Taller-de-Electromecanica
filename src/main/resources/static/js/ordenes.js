@@ -673,6 +673,17 @@ $(function () {
     document.getElementById('btn-guardar-estado').addEventListener('click', guardarEstado);
     document.getElementById('btn-nuevo-pago').addEventListener('click', abrirNuevoPago);
 
+    document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
+        if (!ordenActual) {
+            return;
+        }
+        try {
+            await descargarPdf(`/ordenes-trabajo/${ordenActual.id}/pdf`, `orden-${ordenActual.id}.pdf`);
+        } catch (error) {
+            showApiError(error);
+        }
+    });
+
     inputImagenesOrden.addEventListener('change', () => {
         const archivos = Array.from(inputImagenesOrden.files || []);
         if (!archivos.length) {

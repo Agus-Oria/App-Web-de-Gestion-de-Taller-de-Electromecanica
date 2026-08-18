@@ -42,6 +42,10 @@
                                 <i class="bi bi-person-circle me-1"></i>${escapeHtml(usuario)}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menu-usuario">
+                                <li><a class="dropdown-item" href="#" onclick="abrirConfiguracion(); return false;">
+                                    <i class="bi bi-gear me-2"></i>Configuración
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#" onclick="cerrarSesion(); return false;">
                                     <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
                                 </a></li>

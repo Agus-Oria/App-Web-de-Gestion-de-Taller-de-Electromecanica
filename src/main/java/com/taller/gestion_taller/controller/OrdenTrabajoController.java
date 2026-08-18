@@ -4,6 +4,7 @@ import com.taller.gestion_taller.dto.CambioEstadoOrdenDto;
 import com.taller.gestion_taller.dto.OrdenTrabajoCreateDto;
 import com.taller.gestion_taller.dto.OrdenTrabajoResponseDto;
 import com.taller.gestion_taller.dto.OrdenTrabajoUpdateDto;
+import com.taller.gestion_taller.service.OrdenTrabajoPdfService;
 import com.taller.gestion_taller.service.OrdenTrabajoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +12,8 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,9 +32,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class OrdenTrabajoController {
 
     private final OrdenTrabajoService ordenTrabajoService;
+    private final OrdenTrabajoPdfService ordenTrabajoPdfService;
 
-    public OrdenTrabajoController(OrdenTrabajoService ordenTrabajoService) {
+    public OrdenTrabajoController(
+            OrdenTrabajoService ordenTrabajoService,
+            OrdenTrabajoPdfService ordenTrabajoPdfService) {
         this.ordenTrabajoService = ordenTrabajoService;
+        this.ordenTrabajoPdfService = ordenTrabajoPdfService;
     }
 
     @PostMapping
@@ -61,6 +68,16 @@ public class OrdenTrabajoController {
     @Operation(summary = "Obtener orden de trabajo con todos sus detalles")
     public ResponseEntity<OrdenTrabajoResponseDto> obtenerConDetalles(@PathVariable Long id) {
         return ResponseEntity.ok(ordenTrabajoService.obtenerConDetalles(id));
+    }
+
+    @GetMapping("/{id}/pdf")
+    @Operation(summary = "Exportar orden de trabajo a PDF")
+    public ResponseEntity<byte[]> exportarPdf(@PathVariable Long id) {
+        byte[] pdf = ordenTrabajoPdfService.generarPdf(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"orden-" + id + ".pdf\"")
+                .body(pdf);
     }
 
     @GetMapping("/cliente/{clienteId}")
