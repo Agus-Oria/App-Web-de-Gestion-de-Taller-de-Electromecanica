@@ -11,15 +11,21 @@ import org.springframework.data.repository.query.Param;
 
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long> {
 
-    Page<OrdenTrabajo> findByClienteId(Long clienteId, Pageable pageable);
+    Page<OrdenTrabajo> findByClienteUsuarioId(Long usuarioId, Pageable pageable);
 
-    Page<OrdenTrabajo> findByVehiculoId(Long vehiculoId, Pageable pageable);
+    Optional<OrdenTrabajo> findByIdAndClienteUsuarioId(Long id, Long usuarioId);
 
-    Page<OrdenTrabajo> findByClienteDni(String dni, Pageable pageable);
+    Page<OrdenTrabajo> findByClienteIdAndClienteUsuarioId(Long clienteId, Long usuarioId, Pageable pageable);
 
-    Page<OrdenTrabajo> findByVehiculoPatenteIgnoreCase(String patente, Pageable pageable);
+    Page<OrdenTrabajo> findByVehiculoIdAndVehiculoUsuarioId(Long vehiculoId, Long usuarioId, Pageable pageable);
+
+    Page<OrdenTrabajo> findByClienteDniAndClienteUsuarioId(String dni, Long usuarioId, Pageable pageable);
+
+    Page<OrdenTrabajo> findByVehiculoPatenteIgnoreCaseAndVehiculoUsuarioId(
+            String patente, Long usuarioId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"cliente", "vehiculo", "detalles"})
-    @Query("select o from OrdenTrabajo o where o.id = :id")
-    Optional<OrdenTrabajo> findWithDetallesById(@Param("id") Long id);
+    @Query("select o from OrdenTrabajo o where o.id = :id and o.cliente.usuario.id = :usuarioId")
+    Optional<OrdenTrabajo> findWithDetallesByIdAndUsuarioId(
+            @Param("id") Long id, @Param("usuarioId") Long usuarioId);
 }

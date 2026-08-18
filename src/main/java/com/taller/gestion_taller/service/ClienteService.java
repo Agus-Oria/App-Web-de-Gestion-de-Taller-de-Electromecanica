@@ -8,6 +8,7 @@ import com.taller.gestion_taller.exception.DuplicateResourceException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.ClienteMapper;
 import com.taller.gestion_taller.repository.ClienteRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,21 +19,30 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
+    private final CurrentUser currentUser;
 
-    public ClienteService(ClienteRepository clienteRepository, ClienteMapper clienteMapper) {
+    public ClienteService(
+            ClienteRepository clienteRepository,
+            ClienteMapper clienteMapper,
+            CurrentUser currentUser) {
         this.clienteRepository = clienteRepository;
         this.clienteMapper = clienteMapper;
+        this.currentUser = currentUser;
     }
 
     @Transactional
     public ClienteResponseDto crear(ClienteCreateDto dto) {
-        validarDniDisponible(clienteMapper.normalizarDni(dto.dni()));
-        return clienteMapper.toResponse(clienteRepository.save(clienteMapper.toEntity(dto)));
+        String dni = clienteMapper.normalizarDni(dto.dni());
+        validarDniDisponible(dni);
+        Cliente cliente = clienteMapper.toEntity(dto);
+        cliente.setUsuario(currentUser.obtener());
+        return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 
     @Transactional(readOnly = true)
     public Page<ClienteResponseDto> listar(Pageable pageable) {
-        return clienteRepository.findAll(pageable).map(clienteMapper::toResponse);
+        return clienteRepository.findAllByUsuarioId(currentUser.id(), pageable)
+                .map(clienteMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -42,13 +52,15 @@ public class ClienteService {
 
     @Transactional(readOnly = true)
     public Page<ClienteResponseDto> buscarPorNombre(String nombre, Pageable pageable) {
-        return clienteRepository.findByNombreContainingIgnoreCase(nombre, pageable).map(clienteMapper::toResponse);
+        return clienteRepository
+                .findByNombreContainingIgnoreCaseAndUsuarioId(nombre, currentUser.id(), pageable)
+                .map(clienteMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public ClienteResponseDto buscarPorDni(String dni) {
         String dniNormalizado = clienteMapper.normalizarDni(dni);
-        return clienteMapper.toResponse(clienteRepository.findByDni(dniNormalizado)
+        return clienteMapper.toResponse(clienteRepository.findByDniAndUsuarioId(dniNormalizado, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con dni " + dniNormalizado)));
     }
 
@@ -56,7 +68,7 @@ public class ClienteService {
     public ClienteResponseDto actualizar(Long id, ClienteUpdateDto dto) {
         Cliente cliente = buscarEntidad(id);
         String dni = clienteMapper.normalizarDni(dto.dni());
-        if (clienteRepository.existsByDniAndIdNot(dni, id)) {
+        if (clienteRepository.existsByDniAndIdNotAndUsuarioId(dni, id, currentUser.id())) {
             throw new DuplicateResourceException("Ya existe un cliente con dni " + dni);
         }
         clienteMapper.updateEntity(cliente, dto);
@@ -71,12 +83,12 @@ public class ClienteService {
 
     @Transactional(readOnly = true)
     public Cliente buscarEntidad(Long id) {
-        return clienteRepository.findById(id)
+        return clienteRepository.findByIdAndUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id " + id));
     }
 
     private void validarDniDisponible(String dni) {
-        if (clienteRepository.existsByDni(dni)) {
+        if (clienteRepository.existsByDniAndUsuarioId(dni, currentUser.id())) {
             throw new DuplicateResourceException("Ya existe un cliente con dni " + dni);
         }
     }

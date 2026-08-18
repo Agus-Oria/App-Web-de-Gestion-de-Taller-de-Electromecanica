@@ -8,11 +8,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    Page<Cliente> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+    Page<Cliente> findAllByUsuarioId(Long usuarioId, Pageable pageable);
 
-    Optional<Cliente> findByDni(String dni);
+    Page<Cliente> findByNombreContainingIgnoreCaseAndUsuarioId(String nombre, Long usuarioId, Pageable pageable);
 
-    boolean existsByDni(String dni);
+    Optional<Cliente> findByDniAndUsuarioId(String dni, Long usuarioId);
 
-    boolean existsByDniAndIdNot(String dni, Long id);
+    Optional<Cliente> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    boolean existsByDniAndUsuarioId(String dni, Long usuarioId);
+
+    boolean existsByDniAndIdNotAndUsuarioId(String dni, Long id, Long usuarioId);
 }

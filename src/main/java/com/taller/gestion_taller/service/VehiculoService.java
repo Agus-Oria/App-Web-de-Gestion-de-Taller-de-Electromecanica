@@ -9,6 +9,7 @@ import com.taller.gestion_taller.exception.DuplicateResourceException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.VehiculoMapper;
 import com.taller.gestion_taller.repository.VehiculoRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,26 +21,32 @@ public class VehiculoService {
     private final VehiculoRepository vehiculoRepository;
     private final VehiculoMapper vehiculoMapper;
     private final MarcaService marcaService;
+    private final CurrentUser currentUser;
 
     public VehiculoService(
             VehiculoRepository vehiculoRepository,
             VehiculoMapper vehiculoMapper,
-            MarcaService marcaService) {
+            MarcaService marcaService,
+            CurrentUser currentUser) {
         this.vehiculoRepository = vehiculoRepository;
         this.vehiculoMapper = vehiculoMapper;
         this.marcaService = marcaService;
+        this.currentUser = currentUser;
     }
 
     @Transactional
     public VehiculoResponseDto crear(VehiculoCreateDto dto) {
         validarPatenteDisponible(vehiculoMapper.normalizarPatente(dto.patente()));
         Marca marca = marcaService.buscarEntidad(dto.marcaId());
-        return vehiculoMapper.toResponse(vehiculoRepository.save(vehiculoMapper.toEntity(dto, marca)));
+        Vehiculo vehiculo = vehiculoMapper.toEntity(dto, marca);
+        vehiculo.setUsuario(currentUser.obtener());
+        return vehiculoMapper.toResponse(vehiculoRepository.save(vehiculo));
     }
 
     @Transactional(readOnly = true)
     public Page<VehiculoResponseDto> listar(Pageable pageable) {
-        return vehiculoRepository.findAll(pageable).map(vehiculoMapper::toResponse);
+        return vehiculoRepository.findAllByUsuarioId(currentUser.id(), pageable)
+                .map(vehiculoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -49,7 +56,8 @@ public class VehiculoService {
 
     @Transactional(readOnly = true)
     public VehiculoResponseDto buscarPorPatente(String patente) {
-        return vehiculoMapper.toResponse(vehiculoRepository.findByPatenteIgnoreCase(patente)
+        return vehiculoMapper.toResponse(vehiculoRepository
+                .findByPatenteIgnoreCaseAndUsuarioId(patente, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehiculo no encontrado con patente " + patente)));
     }
 
@@ -57,7 +65,7 @@ public class VehiculoService {
     public VehiculoResponseDto actualizar(Long id, VehiculoUpdateDto dto) {
         Vehiculo vehiculo = buscarEntidad(id);
         String patente = vehiculoMapper.normalizarPatente(dto.patente());
-        if (vehiculoRepository.existsByPatenteIgnoreCaseAndIdNot(patente, id)) {
+        if (vehiculoRepository.existsByPatenteIgnoreCaseAndIdNotAndUsuarioId(patente, id, currentUser.id())) {
             throw new DuplicateResourceException("Ya existe un vehiculo con patente " + patente);
         }
         Marca marca = marcaService.buscarEntidad(dto.marcaId());
@@ -73,12 +81,12 @@ public class VehiculoService {
 
     @Transactional(readOnly = true)
     public Vehiculo buscarEntidad(Long id) {
-        return vehiculoRepository.findById(id)
+        return vehiculoRepository.findByIdAndUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehiculo no encontrado con id " + id));
     }
 
     private void validarPatenteDisponible(String patente) {
-        if (vehiculoRepository.existsByPatenteIgnoreCase(patente)) {
+        if (vehiculoRepository.existsByPatenteIgnoreCaseAndUsuarioId(patente, currentUser.id())) {
             throw new DuplicateResourceException("Ya existe un vehiculo con patente " + patente);
         }
     }

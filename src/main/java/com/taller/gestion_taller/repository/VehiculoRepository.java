@@ -2,13 +2,19 @@ package com.taller.gestion_taller.repository;
 
 import com.taller.gestion_taller.entity.Vehiculo;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
 
-    Optional<Vehiculo> findByPatenteIgnoreCase(String patente);
+    Page<Vehiculo> findAllByUsuarioId(Long usuarioId, Pageable pageable);
 
-    boolean existsByPatenteIgnoreCase(String patente);
+    Optional<Vehiculo> findByIdAndUsuarioId(Long id, Long usuarioId);
 
-    boolean existsByPatenteIgnoreCaseAndIdNot(String patente, Long id);
+    Optional<Vehiculo> findByPatenteIgnoreCaseAndUsuarioId(String patente, Long usuarioId);
+
+    boolean existsByPatenteIgnoreCaseAndUsuarioId(String patente, Long usuarioId);
+
+    boolean existsByPatenteIgnoreCaseAndIdNotAndUsuarioId(String patente, Long id, Long usuarioId);
 }

@@ -8,6 +8,7 @@ import com.taller.gestion_taller.entity.OrdenTrabajo;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.DetalleOrdenTrabajoMapper;
 import com.taller.gestion_taller.repository.DetalleOrdenTrabajoRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +22,19 @@ public class DetalleOrdenTrabajoService {
     private final OrdenTrabajoService ordenTrabajoService;
     private final DetalleOrdenTrabajoMapper detalleMapper;
     private final OrdenTrabajoCalculator calculator;
+    private final CurrentUser currentUser;
 
     public DetalleOrdenTrabajoService(
             DetalleOrdenTrabajoRepository detalleRepository,
             OrdenTrabajoService ordenTrabajoService,
             DetalleOrdenTrabajoMapper detalleMapper,
-            OrdenTrabajoCalculator calculator) {
+            OrdenTrabajoCalculator calculator,
+            CurrentUser currentUser) {
         this.detalleRepository = detalleRepository;
         this.ordenTrabajoService = ordenTrabajoService;
         this.detalleMapper = detalleMapper;
         this.calculator = calculator;
+        this.currentUser = currentUser;
     }
 
     @Transactional
@@ -46,7 +50,8 @@ public class DetalleOrdenTrabajoService {
 
     @Transactional(readOnly = true)
     public Page<DetalleOrdenTrabajoResponseDto> listar(Pageable pageable) {
-        return detalleRepository.findAll(pageable).map(detalleMapper::toResponse);
+        return detalleRepository.findByOrdenTrabajoClienteUsuarioId(currentUser.id(), pageable)
+                .map(detalleMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -79,7 +84,7 @@ public class DetalleOrdenTrabajoService {
 
     @Transactional(readOnly = true)
     public DetalleOrdenTrabajo buscarEntidad(Long id) {
-        return detalleRepository.findById(id)
+        return detalleRepository.findByIdAndOrdenTrabajoClienteUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Detalle de orden no encontrado con id " + id));
     }
 }

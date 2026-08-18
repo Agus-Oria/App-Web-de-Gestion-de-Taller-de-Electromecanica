@@ -12,6 +12,7 @@ import com.taller.gestion_taller.exception.BadRequestException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.OrdenTrabajoMapper;
 import com.taller.gestion_taller.repository.OrdenTrabajoRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import com.taller.gestion_taller.storage.ImagenStorage;
 import com.taller.gestion_taller.validation.OrdenTrabajoCalculator;
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class OrdenTrabajoService {
     private final OrdenTrabajoMapper ordenTrabajoMapper;
     private final OrdenTrabajoCalculator calculator;
     private final ImagenStorage imagenStorage;
+    private final CurrentUser currentUser;
 
     public OrdenTrabajoService(
             OrdenTrabajoRepository ordenTrabajoRepository,
@@ -38,13 +40,15 @@ public class OrdenTrabajoService {
             VehiculoService vehiculoService,
             OrdenTrabajoMapper ordenTrabajoMapper,
             OrdenTrabajoCalculator calculator,
-            ImagenStorage imagenStorage) {
+            ImagenStorage imagenStorage,
+            CurrentUser currentUser) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.clienteService = clienteService;
         this.vehiculoService = vehiculoService;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.calculator = calculator;
         this.imagenStorage = imagenStorage;
+        this.currentUser = currentUser;
     }
 
     @Transactional
@@ -62,7 +66,8 @@ public class OrdenTrabajoService {
 
     @Transactional(readOnly = true)
     public Page<OrdenTrabajoResponseDto> listar(Pageable pageable) {
-        return ordenTrabajoRepository.findAll(pageable).map(ordenTrabajoMapper::toResponse);
+        return ordenTrabajoRepository.findByClienteUsuarioId(currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -78,25 +83,29 @@ public class OrdenTrabajoService {
     @Transactional(readOnly = true)
     public Page<OrdenTrabajoResponseDto> listarPorCliente(Long clienteId, Pageable pageable) {
         clienteService.buscarEntidad(clienteId);
-        return ordenTrabajoRepository.findByClienteId(clienteId, pageable).map(ordenTrabajoMapper::toResponse);
+        return ordenTrabajoRepository.findByClienteIdAndClienteUsuarioId(clienteId, currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<OrdenTrabajoResponseDto> listarPorVehiculo(Long vehiculoId, Pageable pageable) {
         vehiculoService.buscarEntidad(vehiculoId);
-        return ordenTrabajoRepository.findByVehiculoId(vehiculoId, pageable).map(ordenTrabajoMapper::toResponse);
+        return ordenTrabajoRepository.findByVehiculoIdAndVehiculoUsuarioId(vehiculoId, currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<OrdenTrabajoResponseDto> listarPorDniCliente(String dni, Pageable pageable) {
         clienteService.buscarPorDni(dni);
-        return ordenTrabajoRepository.findByClienteDni(dni.trim(), pageable).map(ordenTrabajoMapper::toResponse);
+        return ordenTrabajoRepository.findByClienteDniAndClienteUsuarioId(dni.trim(), currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public Page<OrdenTrabajoResponseDto> listarPorPatenteVehiculo(String patente, Pageable pageable) {
         vehiculoService.buscarPorPatente(patente);
-        return ordenTrabajoRepository.findByVehiculoPatenteIgnoreCase(patente.trim(), pageable)
+        return ordenTrabajoRepository.findByVehiculoPatenteIgnoreCaseAndVehiculoUsuarioId(
+                        patente.trim(), currentUser.id(), pageable)
                 .map(ordenTrabajoMapper::toResponse);
     }
 
@@ -134,13 +143,13 @@ public class OrdenTrabajoService {
 
     @Transactional(readOnly = true)
     public OrdenTrabajo buscarEntidad(Long id) {
-        return ordenTrabajoRepository.findById(id)
+        return ordenTrabajoRepository.findByIdAndClienteUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Orden de trabajo no encontrada con id " + id));
     }
 
     @Transactional(readOnly = true)
     public OrdenTrabajo buscarEntidadConDetalles(Long id) {
-        return ordenTrabajoRepository.findWithDetallesById(id)
+        return ordenTrabajoRepository.findWithDetallesByIdAndUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Orden de trabajo no encontrada con id " + id));
     }
 

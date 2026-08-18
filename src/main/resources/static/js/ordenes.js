@@ -305,14 +305,10 @@ $(function () {
         }
         const formData = new FormData();
         Array.from(archivos).forEach((archivo) => formData.append('imagenes', archivo));
-        const response = await fetch(`${API_BASE_URL}/ordenes-trabajo/${ordenId}/imagenes`, {
+        await apiRequest(`/ordenes-trabajo/${ordenId}/imagenes`, {
             method: 'POST',
             body: formData,
         });
-        if (!response.ok) {
-            const data = await response.json().catch(() => null);
-            throw new Error(data && data.message ? data.message : 'Error al subir las imágenes');
-        }
     }
 
     async function renderImagenes(ordenId) {

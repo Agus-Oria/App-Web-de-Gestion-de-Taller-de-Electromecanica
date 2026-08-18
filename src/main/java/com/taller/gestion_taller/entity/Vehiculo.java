@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -20,14 +21,16 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "vehiculos")
+@Table(name = "vehiculos", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_vehiculos_patente_usuario", columnNames = {"patente", "usuario_id"})
+})
 public class Vehiculo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String patente;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -39,6 +42,10 @@ public class Vehiculo {
 
     @Column(nullable = false)
     private Integer anio;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
     @OneToMany(mappedBy = "vehiculo")
     private List<OrdenTrabajo> ordenesTrabajo = new ArrayList<>();

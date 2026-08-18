@@ -7,6 +7,7 @@ import com.taller.gestion_taller.exception.BadRequestException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.ImagenOrdenMapper;
 import com.taller.gestion_taller.repository.ImagenOrdenRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import com.taller.gestion_taller.storage.ImagenStorage;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,16 +32,19 @@ public class ImagenOrdenService {
     private final OrdenTrabajoService ordenTrabajoService;
     private final ImagenOrdenMapper imagenOrdenMapper;
     private final ImagenStorage imagenStorage;
+    private final CurrentUser currentUser;
 
     public ImagenOrdenService(
             ImagenOrdenRepository imagenOrdenRepository,
             OrdenTrabajoService ordenTrabajoService,
             ImagenOrdenMapper imagenOrdenMapper,
-            ImagenStorage imagenStorage) {
+            ImagenStorage imagenStorage,
+            CurrentUser currentUser) {
         this.imagenOrdenRepository = imagenOrdenRepository;
         this.ordenTrabajoService = ordenTrabajoService;
         this.imagenOrdenMapper = imagenOrdenMapper;
         this.imagenStorage = imagenStorage;
+        this.currentUser = currentUser;
     }
 
     @Transactional
@@ -80,7 +84,7 @@ public class ImagenOrdenService {
 
     @Transactional(readOnly = true)
     public ImagenOrden buscarEntidad(Long id) {
-        return imagenOrdenRepository.findById(id)
+        return imagenOrdenRepository.findByIdAndOrdenTrabajoClienteUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada con id " + id));
     }
 

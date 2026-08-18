@@ -9,6 +9,7 @@ import com.taller.gestion_taller.exception.BadRequestException;
 import com.taller.gestion_taller.exception.ResourceNotFoundException;
 import com.taller.gestion_taller.mapper.PagoMapper;
 import com.taller.gestion_taller.repository.PagoRepository;
+import com.taller.gestion_taller.security.CurrentUser;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import org.springframework.data.domain.Page;
@@ -22,14 +23,17 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final OrdenTrabajoService ordenTrabajoService;
     private final PagoMapper pagoMapper;
+    private final CurrentUser currentUser;
 
     public PagoService(
             PagoRepository pagoRepository,
             OrdenTrabajoService ordenTrabajoService,
-            PagoMapper pagoMapper) {
+            PagoMapper pagoMapper,
+            CurrentUser currentUser) {
         this.pagoRepository = pagoRepository;
         this.ordenTrabajoService = ordenTrabajoService;
         this.pagoMapper = pagoMapper;
+        this.currentUser = currentUser;
     }
 
     @Transactional
@@ -47,7 +51,8 @@ public class PagoService {
 
     @Transactional(readOnly = true)
     public Page<PagoResponseDto> listar(Pageable pageable) {
-        return pagoRepository.findAll(pageable).map(pagoMapper::toResponse);
+        return pagoRepository.findByOrdenTrabajoClienteUsuarioId(currentUser.id(), pageable)
+                .map(pagoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +91,7 @@ public class PagoService {
 
     @Transactional(readOnly = true)
     public Pago buscarEntidad(Long id) {
-        return pagoRepository.findById(id)
+        return pagoRepository.findByIdAndOrdenTrabajoClienteUsuarioId(id, currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id " + id));
     }
 
