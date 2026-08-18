@@ -30,6 +30,8 @@ $(function () {
     const inputDiagnostico = document.getElementById('orden-diagnostico');
     const selectEstado = document.getElementById('orden-estado');
 
+    const inputKilometraje = document.getElementById('orden-kilometraje');
+
     const modalVer = document.getElementById('modal-ver-orden');
     const modalDetalle = document.getElementById('modal-detalle');
     const formDetalle = document.getElementById('form-detalle');
@@ -187,9 +189,10 @@ $(function () {
             mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
             inputBuscarVehiculo.value = vehiculo.patente;
             vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})`);
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})${vehiculo.color ? ` ${vehiculo.color}` : ''}`);
             inputFechaIngreso.value = isoToLocal(orden.fechaIngreso);
             inputFechaEntrega.value = isoToLocal(orden.fechaEntrega);
+            inputKilometraje.value = orden.kilometraje ?? '';
             inputProblema.value = orden.problemaInformado;
             inputDiagnostico.value = orden.diagnostico || '';
             selectEstado.value = orden.estado;
@@ -204,6 +207,7 @@ $(function () {
         const payload = {
             fechaIngreso: localToIso(inputFechaIngreso.value),
             fechaEntrega: localToIso(inputFechaEntrega.value),
+            kilometraje: inputKilometraje.value === '' ? null : Number(inputKilometraje.value),
             problemaInformado: inputProblema.value.trim(),
             diagnostico: inputDiagnostico.value.trim() || null,
             estado: selectEstado.value,
@@ -345,7 +349,8 @@ $(function () {
     function renderVerOrden(orden) {
         document.getElementById('ver-id').textContent = orden.id;
         document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido}`;
-        document.getElementById('ver-vehiculo').textContent = `${orden.vehiculo.patente} - ${orden.vehiculo.marca.nombre} ${orden.vehiculo.modelo} (${orden.vehiculo.anio})`;
+        document.getElementById('ver-vehiculo').textContent = `${orden.vehiculo.patente} - ${orden.vehiculo.marca.nombre} ${orden.vehiculo.modelo} (${orden.vehiculo.anio})${orden.vehiculo.color ? ` ${orden.vehiculo.color}` : ''}`;
+        document.getElementById('ver-kilometraje').textContent = orden.kilometraje != null ? `${Number(orden.kilometraje).toLocaleString('es-AR')} km` : '-';
         document.getElementById('ver-fechaIngreso').textContent = formatFecha(orden.fechaIngreso);
         document.getElementById('ver-fechaEntrega').textContent = formatFecha(orden.fechaEntrega);
         document.getElementById('ver-problema').textContent = orden.problemaInformado;
@@ -578,7 +583,7 @@ $(function () {
         try {
             const vehiculo = await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
             vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})`);
+            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})${vehiculo.color ? ` ${vehiculo.color}` : ''}`);
         } catch (error) {
             showToast('No se encontró un vehículo con esa patente', 'warning');
             vehiculoSeleccionadoId = null;
@@ -805,7 +810,13 @@ $(function () {
                 data: 'vehiculo',
                 title: 'Vehículo',
                 orderable: false,
-                render: (data) => `${escapeHtml(data.patente)} - ${escapeHtml(data.marca.nombre)} ${escapeHtml(data.modelo)}`,
+                render: (data) => `${escapeHtml(data.patente)} - ${escapeHtml(data.marca.nombre)} ${escapeHtml(data.modelo)}${data.color ? ` (${escapeHtml(data.color)})` : ''}`,
+            },
+            {
+                data: 'kilometraje',
+                title: 'Km',
+                orderable: false,
+                render: (data) => (data != null ? `${Number(data).toLocaleString('es-AR')}` : '-'),
             },
             { data: 'estado', title: 'Estado', render: (data) => estadoBadge(data) },
             { data: 'total', title: 'Total', render: (data) => formatMoneda(data) },

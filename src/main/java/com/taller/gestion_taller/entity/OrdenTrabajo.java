@@ -37,6 +37,8 @@ public class OrdenTrabajo {
 
     private Instant fechaEntrega;
 
+    private Long kilometraje;
+
     @Column(nullable = false, length = 1000)
     private String problemaInformado;
 

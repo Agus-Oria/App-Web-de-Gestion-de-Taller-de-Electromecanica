@@ -45,6 +45,7 @@ $(function () {
             selectMarca.value = vehiculo.marca ? vehiculo.marca.id : '';
             document.getElementById('vehiculo-modelo').value = vehiculo.modelo;
             document.getElementById('vehiculo-anio').value = vehiculo.anio;
+            document.getElementById('vehiculo-color').value = vehiculo.color || '';
             abrirModalVehiculo();
         } catch (error) {
             showApiError(error);
@@ -57,6 +58,7 @@ $(function () {
             marcaId: Number(selectMarca.value),
             modelo: document.getElementById('vehiculo-modelo').value.trim(),
             anio: Number(document.getElementById('vehiculo-anio').value),
+            color: document.getElementById('vehiculo-color').value.trim() || null,
         };
         try {
             if (editandoId !== null) {
@@ -158,6 +160,7 @@ $(function () {
             { data: 'marca.nombre', title: 'Marca', render: (data) => escapeHtml(data) },
             { data: 'modelo', title: 'Modelo', render: (data) => escapeHtml(data) },
             { data: 'anio', title: 'Año' },
+            { data: 'color', title: 'Color', render: (data) => (data ? escapeHtml(data) : '-') },
             {
                 data: 'id',
                 title: 'Acciones',

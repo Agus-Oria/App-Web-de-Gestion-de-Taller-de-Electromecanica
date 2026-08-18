@@ -37,6 +37,7 @@ public class OrdenTrabajoMapper {
         OrdenTrabajo ordenTrabajo = new OrdenTrabajo();
         ordenTrabajo.setFechaIngreso(dto.fechaIngreso());
         ordenTrabajo.setFechaEntrega(dto.fechaEntrega());
+        ordenTrabajo.setKilometraje(dto.kilometraje());
         ordenTrabajo.setProblemaInformado(dto.problemaInformado());
         ordenTrabajo.setDiagnostico(dto.diagnostico());
         ordenTrabajo.setEstado(dto.estado() == null ? EstadoOrden.EN_REPARACION : dto.estado());
@@ -57,6 +58,7 @@ public class OrdenTrabajoMapper {
     public void updateEntity(OrdenTrabajo ordenTrabajo, OrdenTrabajoUpdateDto dto, Cliente cliente, Vehiculo vehiculo) {
         ordenTrabajo.setFechaIngreso(dto.fechaIngreso());
         ordenTrabajo.setFechaEntrega(dto.fechaEntrega());
+        ordenTrabajo.setKilometraje(dto.kilometraje());
         ordenTrabajo.setProblemaInformado(dto.problemaInformado());
         ordenTrabajo.setDiagnostico(dto.diagnostico());
         ordenTrabajo.setEstado(dto.estado());
@@ -73,6 +75,7 @@ public class OrdenTrabajoMapper {
                 ordenTrabajo.getId(),
                 ordenTrabajo.getFechaIngreso(),
                 ordenTrabajo.getFechaEntrega(),
+                ordenTrabajo.getKilometraje(),
                 ordenTrabajo.getProblemaInformado(),
                 ordenTrabajo.getDiagnostico(),
                 ordenTrabajo.getEstado(),

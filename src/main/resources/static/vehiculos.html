@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <div id="app-navbar"></div>
@@ -44,6 +45,7 @@
                             <th>Marca</th>
                             <th>Modelo</th>
                             <th>Año</th>
+                            <th>Color</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -83,6 +85,10 @@
                             <label for="vehiculo-anio" class="form-label">Año *</label>
                             <input type="number" class="form-control" id="vehiculo-anio" min="1900" max="2100" required>
                             <div class="invalid-feedback">El año debe estar entre 1900 y 2100.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehiculo-color" class="form-label">Color</label>
+                            <input type="text" class="form-control" id="vehiculo-color" maxlength="30" placeholder="Opcional">
                         </div>
                     </div>
                     <div class="modal-footer">

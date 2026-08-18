@@ -43,6 +43,9 @@ public class Vehiculo {
     @Column(nullable = false)
     private Integer anio;
 
+    @Column(length = 30)
+    private String color;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

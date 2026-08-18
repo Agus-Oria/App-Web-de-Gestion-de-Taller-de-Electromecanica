@@ -9,6 +9,7 @@ public record OrdenTrabajoResponseDto(
         Long id,
         Instant fechaIngreso,
         Instant fechaEntrega,
+        Long kilometraje,
         String problemaInformado,
         String diagnostico,
         EstadoOrden estado,

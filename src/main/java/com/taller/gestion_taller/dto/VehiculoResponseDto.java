@@ -5,6 +5,7 @@ public record VehiculoResponseDto(
         String patente,
         MarcaResponseDto marca,
         String modelo,
-        Integer anio
+        Integer anio,
+        String color
 ) {
 }

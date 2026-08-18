@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <div id="app-navbar"></div>
@@ -46,6 +47,7 @@
                             <th>ID</th>
                             <th>Cliente</th>
                             <th>Vehículo</th>
+                            <th>Km</th>
                             <th>Estado</th>
                             <th>Total</th>
                             <th>Pagado</th>
@@ -115,16 +117,22 @@
                             <label for="orden-diagnostico" class="form-label">Diagnóstico</label>
                             <textarea class="form-control" id="orden-diagnostico" rows="2" maxlength="1000"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="orden-estado" class="form-label">Estado</label>
-                            <select class="form-select" id="orden-estado">
-                                <option value="EN_REPARACION">En reparación</option>
-                                <option value="FINALIZADA">Finalizada</option>
-                                <option value="CANCELADA">Cancelada</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="orden-estado" class="form-label">Estado</label>
+                                <select class="form-select" id="orden-estado">
+                                    <option value="EN_REPARACION">En reparación</option>
+                                    <option value="FINALIZADA">Finalizada</option>
+                                    <option value="CANCELADA">Cancelada</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="orden-kilometraje" class="form-label">Kilómetros</label>
+                                <input type="number" class="form-control" id="orden-kilometraje" min="0" step="1" placeholder="Opcional">
+                            </div>
                         </div>
 
-                        <div id="seccion-lineas" class="border rounded p-3 bg-light">
+                        <div id="seccion-lineas" class="border rounded p-3 bg-body-tertiary">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0">Detalles</h6>
                                 <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-linea">
@@ -137,7 +145,7 @@
                             </div>
                         </div>
 
-                        <div id="seccion-imagenes" class="border rounded p-3 bg-light mt-3">
+                        <div id="seccion-imagenes" class="border rounded p-3 bg-body-tertiary mt-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0">Imágenes del vehículo</h6>
                             </div>
@@ -166,7 +174,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <strong>Cliente:</strong> <span id="ver-cliente"></span><br>
-                            <strong>Vehículo:</strong> <span id="ver-vehiculo"></span>
+                            <strong>Vehículo:</strong> <span id="ver-vehiculo"></span><br>
+                            <strong>Km:</strong> <span id="ver-kilometraje"></span>
                         </div>
                         <div class="col-md-6">
                             <strong>Ingreso:</strong> <span id="ver-fechaIngreso"></span><br>
@@ -314,7 +323,7 @@
                             <label class="form-label">Orden de trabajo</label>
                             <input type="text" class="form-control" id="pago-orden-info" disabled>
                         </div>
-                        <div id="pago-info" class="alert alert-light border d-none mb-3"></div>
+                        <div id="pago-info" class="alert bg-body-tertiary border d-none mb-3"></div>
                         <div class="mb-3">
                             <label for="pago-fecha" class="form-label">Fecha de pago</label>
                             <input type="datetime-local" class="form-control" id="pago-fecha">

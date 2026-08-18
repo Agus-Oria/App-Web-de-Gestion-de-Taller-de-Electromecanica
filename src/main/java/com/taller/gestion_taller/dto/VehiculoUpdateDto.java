@@ -10,6 +10,7 @@ public record VehiculoUpdateDto(
         @NotBlank @Size(max = 20) String patente,
         @NotNull Long marcaId,
         @NotBlank @Size(max = 80) String modelo,
-        @NotNull @Min(1900) @Max(2100) Integer anio
+        @NotNull @Min(1900) @Max(2100) Integer anio,
+        @Size(max = 30) String color
 ) {
 }

@@ -22,6 +22,7 @@ public class VehiculoMapper {
         vehiculo.setMarca(marca);
         vehiculo.setModelo(normalizarModelo(dto.modelo()));
         vehiculo.setAnio(dto.anio());
+        vehiculo.setColor(normalizarColor(dto.color()));
         return vehiculo;
     }
 
@@ -30,6 +31,7 @@ public class VehiculoMapper {
         vehiculo.setMarca(marca);
         vehiculo.setModelo(normalizarModelo(dto.modelo()));
         vehiculo.setAnio(dto.anio());
+        vehiculo.setColor(normalizarColor(dto.color()));
     }
 
     public VehiculoResponseDto toResponse(Vehiculo vehiculo) {
@@ -38,7 +40,8 @@ public class VehiculoMapper {
                 vehiculo.getPatente(),
                 marcaMapper.toResponse(vehiculo.getMarca()),
                 vehiculo.getModelo(),
-                vehiculo.getAnio());
+                vehiculo.getAnio(),
+                vehiculo.getColor());
     }
 
     public String normalizarPatente(String patente) {
@@ -47,5 +50,9 @@ public class VehiculoMapper {
 
     public String normalizarModelo(String modelo) {
         return modelo.trim().toUpperCase();
+    }
+
+    public String normalizarColor(String color) {
+        return color == null || color.isBlank() ? null : color.trim().toUpperCase();
     }
 }

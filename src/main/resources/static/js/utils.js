@@ -98,7 +98,7 @@ function showToast(message, tipo = 'success') {
         warning: 'bi-exclamation-triangle-fill text-warning',
     };
     const toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-bg-light border-0';
+    toast.className = 'toast align-items-center border-0';
     toast.setAttribute('role', 'alert');
     toast.innerHTML = `
         <div class="d-flex">

@@ -32,6 +32,11 @@
                             </li>`).join('')}
                     </ul>
                     <ul class="navbar-nav">
+                        <li class="nav-item d-flex align-items-center me-2">
+                            <button type="button" class="btn btn-outline-light btn-sm" id="btn-tema" title="Cambiar tema">
+                                <i class="bi bi-moon-stars"></i>
+                            </button>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="menu-usuario" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-circle me-1"></i>${escapeHtml(usuario)}
@@ -46,4 +51,16 @@
                 </div>
             </div>
         </nav>`;
+
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema && window.Tema) {
+        const iconoTema = (tema) => (tema === 'dark'
+            ? '<i class="bi bi-sun"></i>'
+            : '<i class="bi bi-moon-stars"></i>');
+        btnTema.innerHTML = iconoTema(window.Tema.obtener());
+        btnTema.addEventListener('click', () => {
+            const tema = window.Tema.alternar();
+            btnTema.innerHTML = iconoTema(tema);
+        });
+    }
 })();
