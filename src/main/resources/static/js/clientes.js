@@ -33,6 +33,8 @@ $(function () {
             document.getElementById('cliente-apellido').value = cliente.apellido;
             document.getElementById('cliente-dni').value = cliente.dni;
             document.getElementById('cliente-telefono').value = cliente.telefono;
+            document.getElementById('cliente-localidad').value = cliente.localidad || '';
+            document.getElementById('cliente-direccion').value = cliente.direccion || '';
             abrirModalCliente();
         } catch (error) {
             showApiError(error);
@@ -45,6 +47,8 @@ $(function () {
             apellido: document.getElementById('cliente-apellido').value.trim(),
             dni: document.getElementById('cliente-dni').value.trim(),
             telefono: document.getElementById('cliente-telefono').value.trim(),
+            localidad: document.getElementById('cliente-localidad').value.trim() || null,
+            direccion: document.getElementById('cliente-direccion').value.trim() || null,
         };
         try {
             if (editandoId !== null) {

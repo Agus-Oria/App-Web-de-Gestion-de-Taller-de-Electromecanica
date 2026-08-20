@@ -15,6 +15,8 @@ public class ClienteMapper {
         cliente.setApellido(normalizarTexto(dto.apellido()));
         cliente.setDni(normalizarDni(dto.dni()));
         cliente.setTelefono(dto.telefono());
+        cliente.setLocalidad(normalizarOpcional(dto.localidad()));
+        cliente.setDireccion(normalizarOpcional(dto.direccion()));
         return cliente;
     }
 
@@ -23,6 +25,8 @@ public class ClienteMapper {
         cliente.setApellido(normalizarTexto(dto.apellido()));
         cliente.setDni(normalizarDni(dto.dni()));
         cliente.setTelefono(dto.telefono());
+        cliente.setLocalidad(normalizarOpcional(dto.localidad()));
+        cliente.setDireccion(normalizarOpcional(dto.direccion()));
     }
 
     public ClienteResponseDto toResponse(Cliente cliente) {
@@ -31,7 +35,9 @@ public class ClienteMapper {
                 cliente.getNombre(),
                 cliente.getApellido(),
                 cliente.getDni(),
-                cliente.getTelefono());
+                cliente.getTelefono(),
+                cliente.getLocalidad(),
+                cliente.getDireccion());
     }
 
     public String normalizarDni(String dni) {
@@ -40,5 +46,9 @@ public class ClienteMapper {
 
     public String normalizarTexto(String texto) {
         return texto.trim().toUpperCase();
+    }
+
+    public String normalizarOpcional(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim().toUpperCase();
     }
 }

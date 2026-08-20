@@ -42,6 +42,12 @@ public class Cliente {
     @Column(nullable = false, length = 30)
     private String telefono;
 
+    @Column(length = 100)
+    private String localidad;
+
+    @Column(length = 150)
+    private String direccion;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

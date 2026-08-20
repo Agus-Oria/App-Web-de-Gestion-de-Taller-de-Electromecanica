@@ -348,7 +348,7 @@ $(function () {
 
     function renderVerOrden(orden) {
         document.getElementById('ver-id').textContent = orden.id;
-        document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido}`;
+        document.getElementById('ver-cliente').textContent = `${orden.cliente.nombre} ${orden.cliente.apellido} (${orden.cliente.dni})`;
         document.getElementById('ver-vehiculo').textContent = `${orden.vehiculo.patente} - ${orden.vehiculo.marca.nombre} ${orden.vehiculo.modelo} (${orden.vehiculo.anio})${orden.vehiculo.color ? ` ${orden.vehiculo.color}` : ''}`;
         document.getElementById('ver-kilometraje').textContent = orden.kilometraje != null ? `${Number(orden.kilometraje).toLocaleString('es-AR')} km` : '-';
         document.getElementById('ver-fechaIngreso').textContent = formatFecha(orden.fechaIngreso);

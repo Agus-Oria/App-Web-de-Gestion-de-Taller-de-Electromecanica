@@ -5,6 +5,8 @@ public record ClienteResponseDto(
         String nombre,
         String apellido,
         String dni,
-        String telefono
+        String telefono,
+        String localidad,
+        String direccion
 ) {
 }

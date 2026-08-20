@@ -46,6 +46,8 @@ $(function () {
             document.getElementById('vehiculo-modelo').value = vehiculo.modelo;
             document.getElementById('vehiculo-anio').value = vehiculo.anio;
             document.getElementById('vehiculo-color').value = vehiculo.color || '';
+            document.getElementById('vehiculo-chasis').value = vehiculo.numeroChasis || '';
+            document.getElementById('vehiculo-motor').value = vehiculo.numeroMotor || '';
             abrirModalVehiculo();
         } catch (error) {
             showApiError(error);
@@ -59,6 +61,8 @@ $(function () {
             modelo: document.getElementById('vehiculo-modelo').value.trim(),
             anio: Number(document.getElementById('vehiculo-anio').value),
             color: document.getElementById('vehiculo-color').value.trim() || null,
+            numeroChasis: document.getElementById('vehiculo-chasis').value.trim() || null,
+            numeroMotor: document.getElementById('vehiculo-motor').value.trim() || null,
         };
         try {
             if (editandoId !== null) {
