@@ -57,11 +57,11 @@ public class ClienteController {
     }
 
     @GetMapping("/buscar")
-    @Operation(summary = "Buscar clientes por nombre")
+    @Operation(summary = "Buscar clientes por nombre o apellido")
     public ResponseEntity<Page<ClienteResponseDto>> buscarPorNombre(
-            @RequestParam String nombre,
+            @RequestParam String texto,
             Pageable pageable) {
-        return ResponseEntity.ok(clienteService.buscarPorNombre(nombre, pageable));
+        return ResponseEntity.ok(clienteService.buscarPorNombre(texto, pageable));
     }
 
     @GetMapping("/dni/{dni}")

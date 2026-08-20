@@ -51,9 +51,8 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ClienteResponseDto> buscarPorNombre(String nombre, Pageable pageable) {
-        return clienteRepository
-                .findByNombreContainingIgnoreCaseAndUsuarioId(nombre, currentUser.id(), pageable)
+    public Page<ClienteResponseDto> buscarPorNombre(String texto, Pageable pageable) {
+        return clienteRepository.buscarPorNombreOApellido(texto.trim(), currentUser.id(), pageable)
                 .map(clienteMapper::toResponse);
     }
 

@@ -2,6 +2,7 @@ $(function () {
     let tabla;
     let editandoId = null;
     let filtroDni = null;
+    let filtroNombre = null;
 
     const modalCliente = document.getElementById('modal-cliente');
     const formCliente = document.getElementById('form-cliente');
@@ -91,22 +92,36 @@ $(function () {
 
     document.getElementById('btn-buscar-cliente').addEventListener('click', async () => {
         const dni = document.getElementById('buscar-cliente-dni').value.trim();
-        if (!dni) {
-            showToast('Ingrese un DNI para buscar', 'warning');
+        const nombre = document.getElementById('buscar-cliente-nombre').value.trim();
+        if (dni && nombre) {
+            showToast('Complete solo uno de los campos de búsqueda', 'warning');
             return;
         }
-        try {
-            await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
-            filtroDni = dni;
-            tabla.ajax.reload();
-        } catch (error) {
-            showToast('No se encontró un cliente con ese DNI', 'warning');
+        if (dni) {
+            try {
+                await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
+                filtroDni = dni;
+                filtroNombre = null;
+                tabla.ajax.reload();
+            } catch (error) {
+                showToast('No se encontró un cliente con ese DNI', 'warning');
+            }
+            return;
         }
+        if (nombre) {
+            filtroNombre = nombre;
+            filtroDni = null;
+            tabla.ajax.reload();
+            return;
+        }
+        showToast('Ingrese un DNI o un nombre para buscar', 'warning');
     });
 
     document.getElementById('btn-limpiar-busqueda').addEventListener('click', () => {
         filtroDni = null;
+        filtroNombre = null;
         document.getElementById('buscar-cliente-dni').value = '';
+        document.getElementById('buscar-cliente-nombre').value = '';
         tabla.ajax.reload();
     });
 
@@ -131,8 +146,11 @@ $(function () {
             if (data.order && data.order.length) {
                 params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
             }
+            const url = filtroNombre
+                ? `${API_BASE_URL}/clientes/buscar?texto=${encodeURIComponent(filtroNombre)}`
+                : `${API_BASE_URL}/clientes`;
             $.ajax({
-                url: `${API_BASE_URL}/clientes`,
+                url,
                 method: 'GET',
                 dataType: 'json',
                 data: params,
