@@ -78,6 +78,22 @@ $(function () {
         });
     }
 
+    async function verCliente(id) {
+        try {
+            const cliente = await apiRequest(`/clientes/${id}`);
+            document.getElementById('ver-cliente-id').textContent = cliente.id;
+            document.getElementById('ver-cliente-nombre').textContent = cliente.nombre;
+            document.getElementById('ver-cliente-apellido').textContent = cliente.apellido;
+            document.getElementById('ver-cliente-dni').textContent = cliente.dni;
+            document.getElementById('ver-cliente-telefono').textContent = cliente.telefono;
+            document.getElementById('ver-cliente-localidad').textContent = cliente.localidad || '-';
+            document.getElementById('ver-cliente-direccion').textContent = cliente.direccion || '-';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-ver-cliente')).show();
+        } catch (error) {
+            showApiError(error);
+        }
+    }
+
     formCliente.addEventListener('submit', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -176,6 +192,9 @@ $(function () {
                 orderable: false,
                 className: 'text-center',
                 render: (data) => `
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-accion" data-accion="ver" data-id="${data}" title="Ver">
+                        <i class="bi bi-eye"></i>
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-primary btn-accion" data-accion="editar" data-id="${data}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -192,7 +211,9 @@ $(function () {
 
     $('#tabla-clientes').on('click', 'tbody button[data-accion]', function () {
         const id = Number(this.dataset.id);
-        if (this.dataset.accion === 'editar') {
+        if (this.dataset.accion === 'ver') {
+            verCliente(id);
+        } else if (this.dataset.accion === 'editar') {
             abrirEdicionCliente(id);
         } else if (this.dataset.accion === 'eliminar') {
             eliminarCliente(id);

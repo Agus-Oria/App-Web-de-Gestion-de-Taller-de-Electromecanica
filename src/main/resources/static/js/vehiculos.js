@@ -91,6 +91,23 @@ $(function () {
         });
     }
 
+    async function verVehiculo(id) {
+        try {
+            const vehiculo = await apiRequest(`/vehiculos/${id}`);
+            document.getElementById('ver-vehiculo-id').textContent = vehiculo.id;
+            document.getElementById('ver-vehiculo-patente').textContent = vehiculo.patente;
+            document.getElementById('ver-vehiculo-marca').textContent = vehiculo.marca ? vehiculo.marca.nombre : '-';
+            document.getElementById('ver-vehiculo-modelo').textContent = vehiculo.modelo;
+            document.getElementById('ver-vehiculo-anio').textContent = vehiculo.anio;
+            document.getElementById('ver-vehiculo-color').textContent = vehiculo.color || '-';
+            document.getElementById('ver-vehiculo-chasis').textContent = vehiculo.numeroChasis || '-';
+            document.getElementById('ver-vehiculo-motor').textContent = vehiculo.numeroMotor || '-';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-ver-vehiculo')).show();
+        } catch (error) {
+            showApiError(error);
+        }
+    }
+
     formVehiculo.addEventListener('submit', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -171,6 +188,9 @@ $(function () {
                 orderable: false,
                 className: 'text-center',
                 render: (data) => `
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-accion" data-accion="ver" data-id="${data}" title="Ver">
+                        <i class="bi bi-eye"></i>
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-primary btn-accion" data-accion="editar" data-id="${data}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -187,7 +207,9 @@ $(function () {
 
     $('#tabla-vehiculos').on('click', 'tbody button[data-accion]', function () {
         const id = Number(this.dataset.id);
-        if (this.dataset.accion === 'editar') {
+        if (this.dataset.accion === 'ver') {
+            verVehiculo(id);
+        } else if (this.dataset.accion === 'editar') {
             abrirEdicionVehiculo(id);
         } else if (this.dataset.accion === 'eliminar') {
             eliminarVehiculo(id);
