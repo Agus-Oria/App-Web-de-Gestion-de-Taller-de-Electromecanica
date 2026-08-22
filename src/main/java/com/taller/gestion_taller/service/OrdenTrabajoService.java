@@ -56,7 +56,7 @@ public class OrdenTrabajoService {
         Cliente cliente = clienteService.buscarEntidad(dto.clienteId());
         Vehiculo vehiculo = vehiculoService.buscarEntidad(dto.vehiculoId());
         OrdenTrabajo ordenTrabajo = ordenTrabajoMapper.toEntity(dto, cliente, vehiculo);
-        if (ordenTrabajo.getEstado() == EstadoOrden.FINALIZADA) {
+        if (ordenTrabajo.getEstado() == EstadoOrden.FINALIZADA && ordenTrabajo.getFechaEntrega() == null) {
             ordenTrabajo.setFechaEntrega(Instant.now());
         }
         calculator.recalcularTotales(ordenTrabajo);
@@ -124,7 +124,7 @@ public class OrdenTrabajoService {
     public OrdenTrabajoResponseDto cambiarEstado(Long id, CambioEstadoOrdenDto dto) {
         OrdenTrabajo ordenTrabajo = buscarEntidad(id);
         ordenTrabajo.setEstado(dto.estado());
-        if (dto.estado() == EstadoOrden.FINALIZADA) {
+        if (dto.estado() == EstadoOrden.FINALIZADA && ordenTrabajo.getFechaEntrega() == null) {
             ordenTrabajo.setFechaEntrega(Instant.now());
         }
         return ordenTrabajoMapper.toResponse(ordenTrabajoRepository.save(ordenTrabajo));
