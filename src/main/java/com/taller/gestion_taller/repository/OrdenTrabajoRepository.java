@@ -21,6 +21,24 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     Page<OrdenTrabajo> findByClienteDniAndClienteUsuarioId(String dni, Long usuarioId, Pageable pageable);
 
+    @Query("SELECT o FROM OrdenTrabajo o "
+            + "WHERE o.cliente.usuario.id = :usuarioId "
+            + "AND (LOWER(o.cliente.dni) LIKE LOWER(CONCAT('%', :texto, '%')) "
+            + "OR LOWER(o.cliente.nombre) LIKE LOWER(CONCAT('%', :texto, '%')) "
+            + "OR LOWER(o.cliente.apellido) LIKE LOWER(CONCAT('%', :texto, '%')))")
+    Page<OrdenTrabajo> buscarPorCliente(
+            @Param("texto") String texto,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable);
+
+    @Query("SELECT o FROM OrdenTrabajo o "
+            + "WHERE o.vehiculo.usuario.id = :usuarioId "
+            + "AND LOWER(o.vehiculo.patente) LIKE LOWER(CONCAT('%', :texto, '%'))")
+    Page<OrdenTrabajo> findByVehiculoPatenteContainingIgnoreCaseAndUsuarioId(
+            @Param("texto") String texto,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable);
+
     Page<OrdenTrabajo> findByVehiculoPatenteIgnoreCaseAndVehiculoUsuarioId(
             String patente, Long usuarioId, Pageable pageable);
 

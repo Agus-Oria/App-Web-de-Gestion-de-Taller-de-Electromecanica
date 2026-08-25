@@ -1,8 +1,7 @@
 $(function () {
     let tabla;
     let editandoId = null;
-    let filtroDni = null;
-    let filtroNombre = null;
+    let filtroTexto = null;
 
     const modalCliente = document.getElementById('modal-cliente');
     const formCliente = document.getElementById('form-cliente');
@@ -106,38 +105,9 @@ $(function () {
 
     document.getElementById('btn-nuevo-cliente').addEventListener('click', abrirNuevoCliente);
 
-    document.getElementById('btn-buscar-cliente').addEventListener('click', async () => {
-        const dni = document.getElementById('buscar-cliente-dni').value.trim();
-        const nombre = document.getElementById('buscar-cliente-nombre').value.trim();
-        if (dni && nombre) {
-            showToast('Complete solo uno de los campos de búsqueda', 'warning');
-            return;
-        }
-        if (dni) {
-            try {
-                await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
-                filtroDni = dni;
-                filtroNombre = null;
-                tabla.ajax.reload();
-            } catch (error) {
-                showToast('No se encontró un cliente con ese DNI', 'warning');
-            }
-            return;
-        }
-        if (nombre) {
-            filtroNombre = nombre;
-            filtroDni = null;
-            tabla.ajax.reload();
-            return;
-        }
-        showToast('Ingrese un DNI o un nombre para buscar', 'warning');
-    });
-
-    document.getElementById('btn-limpiar-busqueda').addEventListener('click', () => {
-        filtroDni = null;
-        filtroNombre = null;
-        document.getElementById('buscar-cliente-dni').value = '';
-        document.getElementById('buscar-cliente-nombre').value = '';
+    document.getElementById('buscar-cliente').addEventListener('keyup', () => {
+        const texto = document.getElementById('buscar-cliente').value.trim();
+        filtroTexto = texto || null;
         tabla.ajax.reload();
     });
 
@@ -152,19 +122,17 @@ $(function () {
                 recordsFiltered: json.totalElements,
                 data: json.content || json.data || [],
             });
-            if (filtroDni) {
-                apiRequest(`/clientes/dni/${encodeURIComponent(filtroDni)}`)
-                    .then((cliente) => responder({ content: [cliente], totalElements: 1 }))
-                    .catch(() => responder({ content: [], totalElements: 0 }));
-                return;
-            }
             const params = { page: data.start / data.length, size: data.length };
             if (data.order && data.order.length) {
                 params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
             }
-            const url = filtroNombre
-                ? `${API_BASE_URL}/clientes/buscar?texto=${encodeURIComponent(filtroNombre)}`
-                : `${API_BASE_URL}/clientes`;
+            let url;
+            if (filtroTexto) {
+                url = `${API_BASE_URL}/clientes/buscar`;
+                params.texto = filtroTexto;
+            } else {
+                url = `${API_BASE_URL}/clientes`;
+            }
             $.ajax({
                 url,
                 method: 'GET',

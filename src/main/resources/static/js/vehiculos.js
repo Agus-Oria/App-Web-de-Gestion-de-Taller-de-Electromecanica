@@ -117,30 +117,15 @@ $(function () {
         }
         guardarVehiculo();
     });
+document.getElementById('btn-nuevo-vehiculo').addEventListener('click', abrirNuevoVehiculo);
 
-    document.getElementById('btn-nuevo-vehiculo').addEventListener('click', abrirNuevoVehiculo);
-    cargarMarcas();
-
-    document.getElementById('btn-buscar-patente').addEventListener('click', async () => {
+    document.getElementById('buscar-vehiculo-patente').addEventListener('keyup', () => {
         const patente = document.getElementById('buscar-vehiculo-patente').value.trim();
-        if (!patente) {
-            showToast('Ingrese una patente para buscar', 'warning');
-            return;
-        }
-        try {
-            await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
-            filtroPatente = patente;
-            tabla.ajax.reload();
-        } catch (error) {
-            showToast('No se encontró un vehículo con esa patente', 'warning');
-        }
-    });
-
-    document.getElementById('btn-limpiar-busqueda').addEventListener('click', () => {
-        filtroPatente = null;
-        document.getElementById('buscar-vehiculo-patente').value = '';
+        filtroPatente = patente || null;
         tabla.ajax.reload();
     });
+
+    cargarMarcas();
 
     tabla = $('#tabla-vehiculos').DataTable({
         serverSide: true,
@@ -154,9 +139,21 @@ $(function () {
                 data: json.content || json.data || [],
             });
             if (filtroPatente) {
-                apiRequest(`/vehiculos/patente/${encodeURIComponent(filtroPatente)}`)
-                    .then((vehiculo) => responder({ content: [vehiculo], totalElements: 1 }))
-                    .catch(() => responder({ content: [], totalElements: 0 }));
+                const paramsFiltro = { texto: filtroPatente, page: data.start / data.length, size: data.length };
+                if (data.order && data.order.length) {
+                    paramsFiltro.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
+                }
+                $.ajax({
+                    url: `${API_BASE_URL}/vehiculos/buscar`,
+                    method: 'GET',
+                    dataType: 'json',
+                    data: paramsFiltro,
+                    success: (json) => responder(json),
+                    error: (xhr) => {
+                        mostrarErrorTabla(xhr);
+                        responder({ content: [], totalElements: 0 });
+                    },
+                });
                 return;
             }
             const params = { page: data.start / data.length, size: data.length };

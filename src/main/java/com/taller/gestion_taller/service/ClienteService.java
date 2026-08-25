@@ -57,6 +57,12 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ClienteResponseDto> buscarPorDni(String texto, Pageable pageable) {
+        return clienteRepository.buscarPorDniContainingIgnoreCase(texto.trim(), currentUser.id(), pageable)
+                .map(clienteMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
     public ClienteResponseDto buscarPorDni(String dni) {
         String dniNormalizado = clienteMapper.normalizarDni(dni);
         return clienteMapper.toResponse(clienteRepository.findByDniAndUsuarioId(dniNormalizado, currentUser.id())

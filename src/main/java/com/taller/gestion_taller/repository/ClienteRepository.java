@@ -14,8 +14,16 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     @Query("SELECT c FROM Cliente c WHERE c.usuario.id = :usuarioId "
             + "AND (LOWER(c.nombre) LIKE LOWER(CONCAT('%', :texto, '%')) "
-            + "OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', :texto, '%')))")
+            + "OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', :texto, '%')) "
+            + "OR LOWER(c.dni) LIKE LOWER(CONCAT('%', :texto, '%')))")
     Page<Cliente> buscarPorNombreOApellido(
+            @Param("texto") String texto,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable);
+
+    @Query("SELECT c FROM Cliente c WHERE c.usuario.id = :usuarioId "
+            + "AND LOWER(c.dni) LIKE LOWER(CONCAT('%', :texto, '%'))")
+    Page<Cliente> buscarPorDniContainingIgnoreCase(
             @Param("texto") String texto,
             @Param("usuarioId") Long usuarioId,
             Pageable pageable);

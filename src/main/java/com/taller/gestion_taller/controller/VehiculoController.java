@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -59,6 +60,14 @@ public class VehiculoController {
     @Operation(summary = "Buscar vehiculo por patente")
     public ResponseEntity<VehiculoResponseDto> buscarPorPatente(@PathVariable String patente) {
         return ResponseEntity.ok(vehiculoService.buscarPorPatente(patente));
+    }
+
+    @GetMapping("/buscar")
+    @Operation(summary = "Buscar vehiculos por patente")
+    public ResponseEntity<Page<VehiculoResponseDto>> buscarPorPatente(
+            @RequestParam String texto,
+            Pageable pageable) {
+        return ResponseEntity.ok(vehiculoService.buscarPorPatente(texto, pageable));
     }
 
     @PutMapping("/{id}")

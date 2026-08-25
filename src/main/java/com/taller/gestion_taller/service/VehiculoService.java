@@ -61,6 +61,13 @@ public class VehiculoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vehiculo no encontrado con patente " + patente)));
     }
 
+    @Transactional(readOnly = true)
+    public Page<VehiculoResponseDto> buscarPorPatente(String texto, Pageable pageable) {
+        return vehiculoRepository
+                .findByPatenteContainingIgnoreCaseAndUsuarioId(texto.trim(), currentUser.id(), pageable)
+                .map(vehiculoMapper::toResponse);
+    }
+
     @Transactional
     public VehiculoResponseDto actualizar(Long id, VehiculoUpdateDto dto) {
         Vehiculo vehiculo = buscarEntidad(id);

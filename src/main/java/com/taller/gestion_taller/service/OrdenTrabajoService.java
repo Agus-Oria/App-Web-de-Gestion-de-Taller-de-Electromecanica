@@ -109,6 +109,20 @@ public class OrdenTrabajoService {
                 .map(ordenTrabajoMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<OrdenTrabajoResponseDto> buscarPorCliente(String texto, Pageable pageable) {
+        return ordenTrabajoRepository.buscarPorCliente(
+                        texto.trim(), currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrdenTrabajoResponseDto> buscarPorPatenteVehiculo(String texto, Pageable pageable) {
+        return ordenTrabajoRepository.findByVehiculoPatenteContainingIgnoreCaseAndUsuarioId(
+                        texto.trim(), currentUser.id(), pageable)
+                .map(ordenTrabajoMapper::toResponse);
+    }
+
     @Transactional
     public OrdenTrabajoResponseDto actualizar(Long id, OrdenTrabajoUpdateDto dto) {
         OrdenTrabajo ordenTrabajo = buscarEntidad(id);

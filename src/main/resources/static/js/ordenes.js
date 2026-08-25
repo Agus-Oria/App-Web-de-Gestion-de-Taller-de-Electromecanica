@@ -3,7 +3,8 @@ $(function () {
     let editandoId = null;
     let ordenActual = null;
     let detalleEditandoId = null;
-    let filtroOrdenBusqueda = null;
+    let filtroClienteOrden = null;
+    let filtroPatenteOrden = null;
     let clienteSeleccionadoId = null;
     let vehiculoSeleccionadoId = null;
     let pagoEditandoId = null;
@@ -59,6 +60,7 @@ $(function () {
         clienteSeleccionadoId = null;
         inputBuscarCliente.value = '';
         divClienteSeleccionado.classList.add('d-none');
+        sugerenciasCliente.ocultar();
     }
 
     function mostrarVehiculoSeleccionado(texto) {
@@ -70,6 +72,7 @@ $(function () {
         vehiculoSeleccionadoId = null;
         inputBuscarVehiculo.value = '';
         divVehiculoSeleccionado.classList.add('d-none');
+        sugerenciasVehiculo.ocultar();
     }
 
     function crearFilaLinea(descripcion = '', cantidad = '', precio = '') {
@@ -184,12 +187,12 @@ $(function () {
             formOrden.reset();
             limpiarClienteSeleccionado();
             limpiarVehiculoSeleccionado();
-            inputBuscarCliente.value = cliente.dni;
+            inputBuscarCliente.value = textoCliente(cliente);
             clienteSeleccionadoId = cliente.id;
             mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
-            inputBuscarVehiculo.value = vehiculo.patente;
+            inputBuscarVehiculo.value = textoVehiculo(vehiculo);
             vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})${vehiculo.color ? ` ${vehiculo.color}` : ''}`);
+            mostrarVehiculoSeleccionado(textoVehiculo(vehiculo));
             inputFechaIngreso.value = isoToLocal(orden.fechaIngreso);
             inputFechaEntrega.value = isoToLocal(orden.fechaEntrega);
             inputKilometraje.value = orden.kilometraje ?? '';
@@ -557,40 +560,6 @@ $(function () {
         });
     }
 
-    document.getElementById('btn-buscar-cliente').addEventListener('click', async () => {
-        const dni = inputBuscarCliente.value.trim();
-        if (!dni) {
-            showToast('Ingrese un DNI para buscar el cliente', 'warning');
-            return;
-        }
-        try {
-            const cliente = await apiRequest(`/clientes/dni/${encodeURIComponent(dni)}`);
-            clienteSeleccionadoId = cliente.id;
-            mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
-        } catch (error) {
-            showToast('No se encontró un cliente con ese DNI', 'warning');
-            clienteSeleccionadoId = null;
-            divClienteSeleccionado.classList.add('d-none');
-        }
-    });
-
-    document.getElementById('btn-buscar-vehiculo').addEventListener('click', async () => {
-        const patente = inputBuscarVehiculo.value.trim();
-        if (!patente) {
-            showToast('Ingrese una patente para buscar el vehículo', 'warning');
-            return;
-        }
-        try {
-            const vehiculo = await apiRequest(`/vehiculos/patente/${encodeURIComponent(patente)}`);
-            vehiculoSeleccionadoId = vehiculo.id;
-            mostrarVehiculoSeleccionado(`${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})${vehiculo.color ? ` ${vehiculo.color}` : ''}`);
-        } catch (error) {
-            showToast('No se encontró un vehículo con esa patente', 'warning');
-            vehiculoSeleccionadoId = null;
-            divVehiculoSeleccionado.classList.add('d-none');
-        }
-    });
-
     document.getElementById('btn-quitar-cliente').addEventListener('click', (event) => {
         event.preventDefault();
         limpiarClienteSeleccionado();
@@ -601,31 +570,156 @@ $(function () {
         limpiarVehiculoSeleccionado();
     });
 
-    document.getElementById('btn-buscar-orden').addEventListener('click', async () => {
-        const dni = document.getElementById('buscar-orden-dni').value.trim();
-        const patente = document.getElementById('buscar-orden-patente').value.trim();
-        if (!dni && !patente) {
-            showToast('Ingrese un DNI o una patente para buscar', 'warning');
-            return;
-        }
-        try {
-            if (dni) {
-                await apiRequest(`/ordenes-trabajo/cliente/dni/${encodeURIComponent(dni)}`);
-                filtroOrdenBusqueda = { tipo: 'cliente', valor: dni };
-            } else {
-                await apiRequest(`/ordenes-trabajo/vehiculo/patente/${encodeURIComponent(patente)}`);
-                filtroOrdenBusqueda = { tipo: 'vehiculo', valor: patente };
+    function debounce(funcion, demora) {
+        let temporizador;
+        return (...args) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...args), demora);
+        };
+    }
+
+    function configurarAutocompletado({ input, contenedor, buscar, formatear, alSeleccionar }) {
+        let elementos = [];
+        let indiceActivo = -1;
+
+        const ocultar = () => {
+            contenedor.classList.add('d-none');
+            contenedor.innerHTML = '';
+            elementos = [];
+            indiceActivo = -1;
+        };
+
+        const renderizar = () => {
+            contenedor.innerHTML = elementos.map((elemento, i) => `
+                <button type="button" class="list-group-item list-group-item-action${i === indiceActivo ? ' active' : ''}" data-indice="${i}">
+                    ${formatear(elemento)}
+                </button>`).join('');
+            contenedor.classList.remove('d-none');
+        };
+
+        const seleccionar = (elemento) => {
+            if (!elemento) {
+                return;
             }
-            tabla.ajax.reload();
-        } catch (error) {
-            showToast(dni ? 'No se encontró un cliente con ese DNI' : 'No se encontró un vehículo con esa patente', 'warning');
-        }
+            ocultar();
+            alSeleccionar(elemento);
+        };
+
+        const consultar = debounce(async () => {
+            const texto = input.value.trim();
+            if (!texto) {
+                ocultar();
+                return;
+            }
+            let resultados = [];
+            try {
+                resultados = await buscar(texto);
+            } catch (error) {
+                resultados = [];
+            }
+            elementos = resultados.slice(0, 8);
+            indiceActivo = -1;
+            if (elementos.length) {
+                renderizar();
+            } else {
+                contenedor.innerHTML = '<span class="list-group-item text-muted">Sin coincidencias</span>';
+                contenedor.classList.remove('d-none');
+            }
+        }, 300);
+
+        input.addEventListener('input', () => consultar());
+
+        contenedor.addEventListener('click', (event) => {
+            const item = event.target.closest('[data-indice]');
+            if (item) {
+                seleccionar(elementos[Number(item.dataset.indice)]);
+            }
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (contenedor.classList.contains('d-none')) {
+                return;
+            }
+            if (event.key === 'ArrowDown' && elementos.length) {
+                indiceActivo = Math.min(indiceActivo + 1, elementos.length - 1);
+                renderizar();
+                event.preventDefault();
+            } else if (event.key === 'ArrowUp' && elementos.length) {
+                indiceActivo = Math.max(indiceActivo - 1, 0);
+                renderizar();
+                event.preventDefault();
+            } else if (event.key === 'Enter') {
+                if (indiceActivo >= 0 && elementos[indiceActivo]) {
+                    seleccionar(elementos[indiceActivo]);
+                    event.preventDefault();
+                }
+            } else if (event.key === 'Escape') {
+                ocultar();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target !== input && !contenedor.contains(event.target)) {
+                ocultar();
+            }
+        });
+
+        return { ocultar };
+    }
+
+    function textoCliente(cliente) {
+        return `${cliente.apellido}, ${cliente.nombre} (${cliente.dni})`;
+    }
+
+    function textoVehiculo(vehiculo) {
+        return `${vehiculo.patente} - ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})${vehiculo.color ? ` ${vehiculo.color}` : ''}`;
+    }
+
+    const sugerenciasCliente = configurarAutocompletado({
+        input: inputBuscarCliente,
+        contenedor: document.getElementById('sugerencias-cliente'),
+        buscar: async (texto) => {
+            const page = await apiRequest(`/clientes/buscar?texto=${encodeURIComponent(texto)}&size=8`);
+            return page.content || [];
+        },
+        formatear: (cliente) => escapeHtml(`${cliente.apellido}, ${cliente.nombre} — ${cliente.dni}`),
+        alSeleccionar: (cliente) => {
+            clienteSeleccionadoId = cliente.id;
+            inputBuscarCliente.value = textoCliente(cliente);
+            mostrarClienteSeleccionado(`${cliente.nombre} ${cliente.apellido} (${cliente.dni})`);
+        },
     });
 
-    document.getElementById('btn-limpiar-orden').addEventListener('click', () => {
-        filtroOrdenBusqueda = null;
-        document.getElementById('buscar-orden-dni').value = '';
-        document.getElementById('buscar-orden-patente').value = '';
+    const sugerenciasVehiculo = configurarAutocompletado({
+        input: inputBuscarVehiculo,
+        contenedor: document.getElementById('sugerencias-vehiculo'),
+        buscar: async (texto) => {
+            const page = await apiRequest(`/vehiculos/buscar?texto=${encodeURIComponent(texto)}&size=8`);
+            return page.content || [];
+        },
+        formatear: (vehiculo) => escapeHtml(`${vehiculo.patente} — ${vehiculo.marca.nombre} ${vehiculo.modelo} (${vehiculo.anio})`),
+        alSeleccionar: (vehiculo) => {
+            vehiculoSeleccionadoId = vehiculo.id;
+            inputBuscarVehiculo.value = textoVehiculo(vehiculo);
+            mostrarVehiculoSeleccionado(textoVehiculo(vehiculo));
+        },
+    });
+
+    document.getElementById('buscar-orden-cliente').addEventListener('keyup', () => {
+        const texto = document.getElementById('buscar-orden-cliente').value.trim();
+        filtroClienteOrden = texto || null;
+        if (filtroClienteOrden) {
+            filtroPatenteOrden = null;
+        }
+        tabla.ajax.reload();
+    });
+
+    document.getElementById('buscar-orden-patente').addEventListener('keyup', () => {
+        const patente = document.getElementById('buscar-orden-patente').value.trim();
+        filtroPatenteOrden = patente || null;
+        if (filtroPatenteOrden) {
+            filtroClienteOrden = null;
+        }
         tabla.ajax.reload();
     });
 
@@ -788,12 +882,15 @@ $(function () {
                 recordsFiltered: json.totalElements,
                 data: json.content || [],
             });
-            const ruta = filtroOrdenBusqueda
-                ? filtroOrdenBusqueda.tipo === 'cliente'
-                    ? `/ordenes-trabajo/cliente/dni/${encodeURIComponent(filtroOrdenBusqueda.valor)}`
-                    : `/ordenes-trabajo/vehiculo/patente/${encodeURIComponent(filtroOrdenBusqueda.valor)}`
-                : '/ordenes-trabajo';
+            let ruta = '/ordenes-trabajo';
             const params = { page: data.start / data.length, size: data.length };
+            if (filtroClienteOrden) {
+                ruta = '/ordenes-trabajo/buscar/cliente';
+                params.texto = filtroClienteOrden;
+            } else if (filtroPatenteOrden) {
+                ruta = '/ordenes-trabajo/buscar/patente-vehiculo';
+                params.texto = filtroPatenteOrden;
+            }
             if (data.order && data.order.length) {
                 params.sort = `${data.columns[data.order[0].column].data},${data.order[0].dir}`;
             }

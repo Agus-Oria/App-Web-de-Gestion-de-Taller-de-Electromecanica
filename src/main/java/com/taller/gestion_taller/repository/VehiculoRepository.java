@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
 
@@ -17,4 +19,12 @@ public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
     boolean existsByPatenteIgnoreCaseAndUsuarioId(String patente, Long usuarioId);
 
     boolean existsByPatenteIgnoreCaseAndIdNotAndUsuarioId(String patente, Long id, Long usuarioId);
+
+    @Query("SELECT v FROM Vehiculo v "
+            + "WHERE v.usuario.id = :usuarioId "
+            + "AND LOWER(v.patente) LIKE LOWER(CONCAT('%', :texto, '%'))")
+    Page<Vehiculo> findByPatenteContainingIgnoreCaseAndUsuarioId(
+            @Param("texto") String texto,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable);
 }

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -110,6 +111,22 @@ public class OrdenTrabajoController {
             @PathVariable String patente,
             Pageable pageable) {
         return ResponseEntity.ok(ordenTrabajoService.listarPorPatenteVehiculo(patente, pageable));
+    }
+
+    @GetMapping("/buscar/cliente")
+    @Operation(summary = "Buscar ordenes por DNI, nombre o apellido del cliente")
+    public ResponseEntity<Page<OrdenTrabajoResponseDto>> buscarPorCliente(
+            @RequestParam String texto,
+            Pageable pageable) {
+        return ResponseEntity.ok(ordenTrabajoService.buscarPorCliente(texto, pageable));
+    }
+
+    @GetMapping("/buscar/patente-vehiculo")
+    @Operation(summary = "Buscar ordenes por patente parcial del vehiculo")
+    public ResponseEntity<Page<OrdenTrabajoResponseDto>> buscarPorPatenteVehiculo(
+            @RequestParam String texto,
+            Pageable pageable) {
+        return ResponseEntity.ok(ordenTrabajoService.buscarPorPatenteVehiculo(texto, pageable));
     }
 
     @PatchMapping("/{id}/estado")

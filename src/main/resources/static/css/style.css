@@ -41,3 +41,14 @@ main.container {
     padding: 0.15rem 0.35rem;
     line-height: 1;
 }
+
+.autocompletado {
+    max-height: 15rem;
+    overflow-y: auto;
+    z-index: 1056;
+    cursor: pointer;
+}
+
+.autocompletado .list-group-item {
+    border-radius: 0;
+}
